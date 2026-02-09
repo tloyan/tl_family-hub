@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Familio — UX Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ========================================
+     RESET & BASE
+     ======================================== */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #F0F0F0;
+    color: #1A1A1A;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ========================================
+     PAGE HEADER
+     ======================================== */
+  .page-header {
+    width: 100%;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E5E5E5;
+    padding: 24px 24px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: -0.3px;
+  }
+
+  .page-header p {
+    font-size: 13px;
+    color: #6B7280;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  /* ========================================
+     DIRECTION SELECTOR (pill chips)
+     ======================================== */
+  .direction-selector {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 16px 0 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .direction-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dir-pill {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1.5px solid #E5E5E5;
+    background: #FFFFFF;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.4;
+  }
+
+  .dir-pill:hover {
+    border-color: #1A1A1A;
+    color: #1A1A1A;
+  }
+
+  .dir-pill.active {
+    background: #1A1A1A;
+    border-color: #1A1A1A;
+    color: #FFFFFF;
+  }
+
+  .dir-pill .pill-num {
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ========================================
+     DIRECTION META (description below pills)
+     ======================================== */
+  .direction-meta {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 24px 8px;
+    text-align: center;
+  }
+
+  .direction-meta h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1A1A;
+    letter-spacing: -0.4px;
+  }
+
+  .direction-meta .dir-subtitle {
+    font-size: 14px;
+    color: #6B7280;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+
+  .direction-meta .dir-keywords {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .direction-meta .keyword {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: #F5F5F5;
+    color: #6B7280;
+  }
+
+  /* ========================================
+     PHONE FRAME
+     ======================================== */
+  .phone-container {
+    padding: 24px 24px 48px;
+  }
+
+  .phone-frame {
+    width: 375px;
+    height: 740px;
+    border-radius: 40px;
+    border: 8px solid #1A1A1A;
+    background: #FFFFFF;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 2px #333,
+      0 20px 60px rgba(0,0,0,0.15),
+      0 8px 20px rgba(0,0,0,0.1);
+    margin: 0 auto;
+  }
+
+  @media (max-width: 420px) {
+    .phone-frame {
+      width: 100%;
+      max-width: 375px;
+      border-radius: 0;
+      border-width: 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      height: 700px;
+    }
+    .phone-container {
+      padding: 16px 0 48px;
+    }
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .status-bar .time { font-size: 15px; font-weight: 600; }
+  .status-bar .icons { display: flex; gap: 4px; align-items: center; }
+  .status-bar .icons span { font-size: 12px; }
+
+  /* Hide all directions by default */
+  .direction { display: none; }
+  .direction.active { display: block; }
+
+  /* ========================================
+     COMMON RITUAL STYLES
+     ======================================== */
+  .ritual-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #D1D5DB;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .ritual-check:checked {
+    background: #D1D5DB;
+    border-color: #D1D5DB;
+  }
+
+  .ritual-check:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .ritual-done {
+    opacity: 0.4;
+    text-decoration: line-through;
+    text-decoration-color: #9CA3AF;
+  }
+
+  /* Peek hint for adjacent column */
+  .peek-hint {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 16px;
+    pointer-events: none;
+  }
+
+  /* ========================================
+     DIRECTION 1: BULLET JOURNAL
+     ======================================== */
+  .d1-screen {
+    background: #FAFAFA;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .d1-status { background: #FAFAFA; color: #1A1A1A; }
+
+  .d1-body {
+    flex: 1;
+    padding: 8px 28px 24px;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .d1-moment-tabs {
+    display: flex;
+    gap: 24px;
+    padding: 0 28px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+
+  .d1-moment-tab {
+    font-size: 13px;
+    font-weight: 400;
+    color: #9CA3AF;
+    padding: 12px 0;
+    border-bottom: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .d1-moment-tab.active {
+    color: #1A1A1A;
+    font-weight: 500;
+    border-bottom-color: #1A1A1A;
+  }
+
+  .d1-member-name {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -1px;
+    color: #1A1A1A;
+    margin-top: 28px;
+    margin-bottom: 4px;
+  }
+
+  .d1-date {
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-bottom: 32px;
+    font-weight: 400;
+  }
+
+  .d1-rituals {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .d1-ritual-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #F0F0F0;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+
+  .d1-ritual-item .ritual-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border-width: 1.5px;
+    border-color: #C4C4C4;
+  }
+
+  .d1-ritual-item .ritual-check:checked {
+    background: #C4C4C4;
+    border-color: #C4C4C4;
+  }
+
+  .d1-ritual-item .ritual-check:checked::after {
+    top: 1px;
+    left: 4px;
+    width: 4px;
+    height: 7px;
+    border-width: 0 1.5px 1.5px 0;
+  }
+
+  .d1-ritual-text {
+    font-size: 15px;
+    font-weight: 400;
+    color: #1A1A1A;
+    line-height: 1.4;
+  }
+
+  .d1-ritual-item.done .d1-ritual-text {
+    color: #C4C4C4;
+    text-decoration: line-through;
+    text-decoration-color: #D4D4D4;
+  }
+
+  .d1-fab {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+  }
+
+  .d1-fab svg { width: 20px; height: 20px; }
+
+  .d1-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.06));
+  }
+
+  /* ========================================
+     DIRECTION 2: TABLEAU FAMILIAL
+     ======================================== */
+  .d2-screen {
+    background: #FFFBF5;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .d2-status { background: #FFFBF5; color: #1A1A1A; }
+
+  .d2-header {
+    background: #3B82F6;
+    padding: 16px 20px 20px;
+    color: #FFFFFF;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .d2-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .d2-member-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .d2-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .d2-moment-selector {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .d2-moment-seg {
+    flex: 1;
+    padding: 10px 8px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .d2-moment-seg.active {
+    background: #FFFFFF;
+    color: #3B82F6;
+    font-weight: 600;
+  }
+
+  .d2-body {
+    flex: 1;
+    padding: 16px 16px 80px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .d2-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .d2-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .d2-card.done {
+    opacity: 0.45;
+  }
+
+  .d2-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #EFF6FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .d2-card.done .d2-card-icon {
+    background: #F5F5F5;
+  }
+
+  .d2-card-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: #1A1A1A;
+    line-height: 1.3;
+  }
+
+  .d2-card.done .d2-card-text {
+    text-decoration: line-through;
+    text-decoration-color: #C4C4C4;
+    color: #9CA3AF;
+  }
+
+  .d2-card .ritual-check {
+    border-radius: 6px;
+    border-color: #D1D5DB;
+  }
+
+  .d2-card.done .ritual-check {
+    background: #3B82F6;
+    border-color: #3B82F6;
+  }
+
+  .d2-card.done .ritual-check::after {
+    border-color: #fff;
+  }
+
+  .d2-toolbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: #FFFFFF;
+    border-top: 1px solid #F0ECE4;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 16px;
+  }
+
+  .d2-toolbar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .d2-toolbar-btn svg { width: 22px; height: 22px; color: #9CA3AF; }
+  .d2-toolbar-btn span { font-size: 10px; color: #9CA3AF; font-weight: 500; }
+  .d2-toolbar-btn.active svg { color: #3B82F6; }
+  .d2-toolbar-btn.active span { color: #3B82F6; }
+
+  .d2-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.08));
+  }
+
+  /* ========================================
+     DIRECTION 3: DASHBOARD MODERNE
+     ======================================== */
+  .d3-screen {
+    background: #FAFAFA;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .d3-status { background: #FFFFFF; color: #1A1A1A; }
+
+  .d3-topbar {
+    background: #FFFFFF;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+
+  .d3-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #3B82F6;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .d3-topbar-info {
+    flex: 1;
+  }
+
+  .d3-topbar-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+
+  .d3-topbar-sub {
+    font-size: 12px;
+    color: #6B7280;
+  }
+
+  .d3-moment-pills {
+    display: flex;
+    gap: 4px;
+  }
+
+  .d3-moment-pill {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B7280;
+    background: #F5F5F5;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .d3-moment-pill.active {
+    background: #1A1A1A;
+    color: #FFFFFF;
+  }
+
+  .d3-ai-banner {
+    background: #F0F7FF;
+    border-left: 3px solid #3B82F6;
+    margin: 12px 16px 0;
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .d3-ai-banner svg {
+    width: 16px;
+    height: 16px;
+    color: #3B82F6;
+    flex-shrink: 0;
+  }
+
+  .d3-ai-banner span {
+    font-size: 12px;
+    color: #3B82F6;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .d3-progress {
+    padding: 16px 20px 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .d3-progress-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: #E5E5E5;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .d3-progress-bar-fill {
+    height: 100%;
+    background: #3B82F6;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .d3-progress-text {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .d3-body {
+    flex: 1;
+    padding: 8px 16px 24px;
+    overflow-y: auto;
+  }
+
+  .d3-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 12px 4px 8px;
+  }
+
+  .d3-ritual-list {
+    background: #FFFFFF;
+    border-radius: 8px;
+    border: 1px solid #E5E5E5;
+    overflow: hidden;
+  }
+
+  .d3-ritual-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .d3-ritual-row:not(:last-child) {
+    border-bottom: 1px solid #F5F5F5;
+  }
+
+  .d3-ritual-row:nth-child(even) {
+    background: #FAFAFA;
+  }
+
+  .d3-ritual-row .ritual-check {
+    border-radius: 4px;
+  }
+
+  .d3-ritual-text {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+    color: #1A1A1A;
+  }
+
+  .d3-ritual-row.done .d3-ritual-text {
+    color: #C4C4C4;
+    text-decoration: line-through;
+  }
+
+  .d3-ritual-row.done {
+    background: #FAFAFA;
+  }
+
+  .d3-ritual-row.done .ritual-check {
+    background: #10B981;
+    border-color: #10B981;
+  }
+
+  .d3-slide-handle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border-top: 1px solid #E5E5E5;
+    padding: 8px 0 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .d3-slide-handle .handle-bar {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #D1D5DB;
+    margin-bottom: 6px;
+  }
+
+  .d3-slide-handle span {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .d3-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.05));
+  }
+
+  /* ========================================
+     DIRECTION 4: KIOSK-FIRST
+     ======================================== */
+  .d4-screen {
+    background: #FFFFFF;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .d4-status { background: #FFFFFF; color: #1A1A1A; }
+
+  .d4-header {
+    padding: 8px 24px 20px;
+  }
+
+  .d4-moment-label {
+    font-size: 36px;
+    font-weight: 800;
+    color: #1A1A1A;
+    letter-spacing: -1.5px;
+    line-height: 1;
+  }
+
+  .d4-member-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #3B82F6;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .d4-member-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3B82F6;
+  }
+
+  .d4-body {
+    flex: 1;
+    padding: 0 20px 100px;
+    overflow-y: auto;
+  }
+
+  .d4-ritual-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 16px 16px 0;
+    min-height: 60px;
+    border-left: 4px solid #3B82F6;
+    padding-left: 16px;
+    margin-bottom: 8px;
+    border-radius: 0 8px 8px 0;
+    background: #F8FAFF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .d4-ritual-row:hover {
+    background: #EFF6FF;
+  }
+
+  .d4-ritual-row.done {
+    border-left-color: #D1D5DB;
+    background: #FAFAFA;
+    opacity: 0.5;
+  }
+
+  .d4-ritual-row .ritual-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border-width: 2.5px;
+    border-color: #3B82F6;
+  }
+
+  .d4-ritual-row.done .ritual-check {
+    background: #D1D5DB;
+    border-color: #D1D5DB;
+  }
+
+  .d4-ritual-row.done .ritual-check::after {
+    top: 3px;
+    left: 7px;
+    width: 6px;
+    height: 10px;
+  }
+
+  .d4-ritual-text {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 500;
+    color: #1A1A1A;
+    line-height: 1.3;
+  }
+
+  .d4-ritual-row.done .d4-ritual-text {
+    text-decoration: line-through;
+    text-decoration-color: #C4C4C4;
+    color: #9CA3AF;
+  }
+
+  .d4-fab {
+    position: absolute;
+    bottom: 28px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: #3B82F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+    cursor: pointer;
+  }
+
+  .d4-fab svg { width: 28px; height: 28px; }
+
+  .d4-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.06));
+  }
+
+  /* ========================================
+     DIRECTION 5: CONTEXTUEL IMMERSIF
+     ======================================== */
+  .d5-screen {
+    background: #FFFBF5;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .d5-status { background: transparent; color: #6B5B3E; }
+
+  .d5-atmosphere {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 260px;
+    background: linear-gradient(180deg, #FFF0D4 0%, #FFF6E8 40%, #FFFBF5 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .d5-atmosphere-orb {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,190,80,0.25) 0%, transparent 70%);
+  }
+
+  .d5-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: 24px;
+  }
+
+  .d5-header {
+    padding: 8px 24px 24px;
+  }
+
+  .d5-time-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .d5-time-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #F59E0B;
+    box-shadow: 0 0 12px rgba(245,158,11,0.4);
+  }
+
+  .d5-time-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #B08D57;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .d5-time-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, #E8D5B0, transparent);
+  }
+
+  .d5-greeting {
+    font-size: 28px;
+    font-weight: 300;
+    color: #4A3D2A;
+    letter-spacing: -0.5px;
+    line-height: 1.3;
+  }
+
+  .d5-greeting strong {
+    font-weight: 600;
+  }
+
+  .d5-rituals {
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .d5-ritual-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 16px;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(232,213,176,0.3);
+  }
+
+  .d5-ritual-item:hover {
+    background: rgba(255,255,255,0.9);
+  }
+
+  .d5-ritual-item.done {
+    opacity: 0.35;
+    background: rgba(250,250,250,0.5);
+  }
+
+  .d5-ritual-item .ritual-check {
+    border-radius: 50%;
+    border-color: #D4B97A;
+    width: 22px;
+    height: 22px;
+  }
+
+  .d5-ritual-item.done .ritual-check {
+    background: #D4B97A;
+    border-color: #D4B97A;
+  }
+
+  .d5-ritual-item.done .ritual-check::after {
+    top: 3px;
+    left: 6px;
+    width: 5px;
+    height: 9px;
+  }
+
+  .d5-ritual-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 400;
+    color: #4A3D2A;
+    line-height: 1.4;
+  }
+
+  .d5-ritual-item.done .d5-ritual-text {
+    text-decoration: line-through;
+    text-decoration-color: #C4B080;
+    color: #A0906A;
+  }
+
+  .d5-ai-whisper {
+    margin: 16px 24px 0;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+    border: 1px dashed rgba(212,185,122,0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .d5-ai-whisper svg {
+    width: 18px;
+    height: 18px;
+    color: #C4A44A;
+    flex-shrink: 0;
+  }
+
+  .d5-ai-whisper span {
+    font-size: 13px;
+    color: #8A7A52;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .d5-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.06));
+  }
+
+  /* ========================================
+     DIRECTION 6: HYBRIDE EPURE
+     ======================================== */
+  .d6-screen {
+    background: #FDFCFA;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .d6-status { background: #FDFCFA; color: #1A1A1A; }
+
+  .d6-header {
+    padding: 4px 20px 16px;
+  }
+
+  .d6-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .d6-member-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .d6-color-accent {
+    width: 4px;
+    height: 28px;
+    border-radius: 2px;
+    background: #3B82F6;
+  }
+
+  .d6-member-info h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1A1A1A;
+    letter-spacing: -0.2px;
+  }
+
+  .d6-member-info span {
+    font-size: 12px;
+    color: #6B7280;
+  }
+
+  .d6-dots-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #9CA3AF;
+  }
+
+  .d6-moment-pills {
+    display: flex;
+    gap: 8px;
+  }
+
+  .d6-moment-chip {
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B7280;
+    background: #F5F5F5;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .d6-moment-chip.active {
+    background: #3B82F6;
+    color: #FFFFFF;
+  }
+
+  .d6-body {
+    flex: 1;
+    padding: 4px 20px 72px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .d6-ritual-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #F0EDE8;
+  }
+
+  .d6-ritual-row:hover {
+    border-color: #E0DDD8;
+  }
+
+  .d6-ritual-row.done {
+    opacity: 0.4;
+    background: #FAFAFA;
+    border-color: #F0F0F0;
+  }
+
+  .d6-ritual-row .ritual-check {
+    border-radius: 5px;
+    border-color: #D1D5DB;
+  }
+
+  .d6-ritual-row.done .ritual-check {
+    background: #3B82F6;
+    border-color: #3B82F6;
+  }
+
+  .d6-ritual-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 450;
+    color: #1A1A1A;
+    line-height: 1.35;
+  }
+
+  .d6-ritual-row.done .d6-ritual-text {
+    text-decoration: line-through;
+    text-decoration-color: #C4C4C4;
+    color: #9CA3AF;
+  }
+
+  .d6-bottombar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #FFFFFF;
+    border-top: 1px solid #F0EDE8;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 32px;
+  }
+
+  .d6-bar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  .d6-bar-btn svg { width: 20px; height: 20px; color: #C4C4C4; }
+  .d6-bar-btn span { font-size: 10px; color: #C4C4C4; font-weight: 500; }
+  .d6-bar-btn.active svg { color: #3B82F6; }
+  .d6-bar-btn.active span { color: #3B82F6; }
+
+  .d6-peek {
+    background: linear-gradient(to right, transparent, rgba(139,92,246,0.05));
+  }
+</style>
+</head>
+<body>
+
+<!-- ==========================================
+     PAGE HEADER + DIRECTION SELECTOR
+     ========================================== -->
+<div class="page-header">
+  <h1>Familio — Directions UX</h1>
+  <p>6 approches visuelles pour l'experience mobile principale</p>
+  <div class="direction-selector" id="dirSelector">
+    <button class="dir-pill active" data-dir="1" onclick="switchDirection(1)">
+      <span class="pill-num">1</span>Bullet Journal
+    </button>
+    <button class="dir-pill" data-dir="2" onclick="switchDirection(2)">
+      <span class="pill-num">2</span>Tableau Familial
+    </button>
+    <button class="dir-pill" data-dir="3" onclick="switchDirection(3)">
+      <span class="pill-num">3</span>Dashboard Moderne
+    </button>
+    <button class="dir-pill" data-dir="4" onclick="switchDirection(4)">
+      <span class="pill-num">4</span>Kiosk-First
+    </button>
+    <button class="dir-pill" data-dir="5" onclick="switchDirection(5)">
+      <span class="pill-num">5</span>Contextuel Immersif
+    </button>
+    <button class="dir-pill" data-dir="6" onclick="switchDirection(6)">
+      <span class="pill-num">6</span>Hybride Epure
+    </button>
+  </div>
+</div>
+
+<!-- ==========================================
+     DIRECTION META
+     ========================================== -->
+<div class="direction-meta" id="dirMeta">
+  <!-- Filled by JS -->
+</div>
+
+<!-- ==========================================
+     PHONE MOCKUPS
+     ========================================== -->
+<div class="phone-container">
+
+<!-- ===================== DIRECTION 1: BULLET JOURNAL ===================== -->
+<div class="direction active" id="dir1">
+<div class="phone-frame">
+<div class="d1-screen">
+  <div class="status-bar d1-status">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#1A1A1A"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D1D5DB"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#1A1A1A" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#1A1A1A"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#1A1A1A"/></svg>
+    </div>
+  </div>
+
+  <div class="d1-moment-tabs">
+    <div class="d1-moment-tab active">Matin</div>
+    <div class="d1-moment-tab">Midi</div>
+    <div class="d1-moment-tab">Soir</div>
+  </div>
+
+  <div class="d1-body">
+    <h1 class="d1-member-name">Sophie</h1>
+    <div class="d1-date">Vendredi 7 fevrier</div>
+
+    <ul class="d1-rituals" id="d1-rituals">
+      <li class="d1-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d1-ritual-text">Preparer les cartables</span>
+      </li>
+      <li class="d1-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d1-ritual-text">Petit-dejeuner en famille</span>
+      </li>
+      <li class="d1-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d1-ritual-text">Verifier les devoirs de Lucas</span>
+      </li>
+      <li class="d1-ritual-item done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d1-ritual-text">Sortir les poubelles</span>
+      </li>
+      <li class="d1-ritual-item done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d1-ritual-text">Lancer une machine</span>
+      </li>
+    </ul>
+
+    <div class="d1-fab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </div>
+  </div>
+
+  <div class="peek-hint d1-peek"></div>
+</div>
+</div>
+</div>
+
+<!-- ===================== DIRECTION 2: TABLEAU FAMILIAL ===================== -->
+<div class="direction" id="dir2">
+<div class="phone-frame">
+<div class="d2-screen">
+  <div class="status-bar d2-status">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#1A1A1A"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D1D5DB"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#1A1A1A" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#1A1A1A"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#1A1A1A"/></svg>
+    </div>
+  </div>
+
+  <div class="d2-header">
+    <div class="d2-header-top">
+      <span class="d2-member-name">Sophie</span>
+      <div class="d2-avatar">S</div>
+    </div>
+    <div class="d2-moment-selector">
+      <div class="d2-moment-seg active">Matin</div>
+      <div class="d2-moment-seg">Midi</div>
+      <div class="d2-moment-seg">Soir</div>
+    </div>
+  </div>
+
+  <div class="d2-body" id="d2-rituals">
+    <div class="d2-card" onclick="toggleRitual(this)">
+      <div class="d2-card-icon">&#127890;</div>
+      <span class="d2-card-text">Preparer les cartables</span>
+      <input type="checkbox" class="ritual-check">
+    </div>
+    <div class="d2-card" onclick="toggleRitual(this)">
+      <div class="d2-card-icon">&#129360;</div>
+      <span class="d2-card-text">Petit-dejeuner en famille</span>
+      <input type="checkbox" class="ritual-check">
+    </div>
+    <div class="d2-card" onclick="toggleRitual(this)">
+      <div class="d2-card-icon">&#128218;</div>
+      <span class="d2-card-text">Verifier les devoirs de Lucas</span>
+      <input type="checkbox" class="ritual-check">
+    </div>
+    <div class="d2-card done" onclick="toggleRitual(this)">
+      <div class="d2-card-icon">&#9851;&#65039;</div>
+      <span class="d2-card-text">Sortir les poubelles</span>
+      <input type="checkbox" class="ritual-check" checked>
+    </div>
+    <div class="d2-card done" onclick="toggleRitual(this)">
+      <div class="d2-card-icon">&#128084;</div>
+      <span class="d2-card-text">Lancer une machine</span>
+      <input type="checkbox" class="ritual-check" checked>
+    </div>
+  </div>
+
+  <div class="d2-toolbar">
+    <div class="d2-toolbar-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Rituels</span>
+    </div>
+    <div class="d2-toolbar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <span>Famille</span>
+    </div>
+    <div class="d2-toolbar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <span>Assistant</span>
+    </div>
+    <div class="d2-toolbar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>Reglages</span>
+    </div>
+  </div>
+
+  <div class="peek-hint d2-peek"></div>
+</div>
+</div>
+</div>
+
+<!-- ===================== DIRECTION 3: DASHBOARD MODERNE ===================== -->
+<div class="direction" id="dir3">
+<div class="phone-frame">
+<div class="d3-screen">
+  <div class="status-bar d3-status">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#1A1A1A"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D1D5DB"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#1A1A1A" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#1A1A1A"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#1A1A1A"/></svg>
+    </div>
+  </div>
+
+  <div class="d3-topbar">
+    <div class="d3-avatar">S</div>
+    <div class="d3-topbar-info">
+      <div class="d3-topbar-name">Sophie</div>
+      <div class="d3-topbar-sub">Vendredi 7 fevrier</div>
+    </div>
+    <div class="d3-moment-pills">
+      <div class="d3-moment-pill active">Matin</div>
+      <div class="d3-moment-pill">Midi</div>
+      <div class="d3-moment-pill">Soir</div>
+    </div>
+  </div>
+
+  <div class="d3-ai-banner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+    <span>Lucas a un controle de maths jeudi — penser a revoir les exercices ce soir.</span>
+  </div>
+
+  <div class="d3-progress">
+    <div class="d3-progress-bar-bg">
+      <div class="d3-progress-bar-fill" id="d3-progress-fill" style="width: 40%"></div>
+    </div>
+    <span class="d3-progress-text" id="d3-progress-text">2 / 5</span>
+  </div>
+
+  <div class="d3-body">
+    <div class="d3-section-label">A faire</div>
+    <div class="d3-ritual-list" id="d3-rituals-todo">
+      <div class="d3-ritual-row" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d3-ritual-text">Preparer les cartables</span>
+      </div>
+      <div class="d3-ritual-row" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d3-ritual-text">Petit-dejeuner en famille</span>
+      </div>
+      <div class="d3-ritual-row" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d3-ritual-text">Verifier les devoirs de Lucas</span>
+      </div>
+    </div>
+
+    <div class="d3-section-label">Termine</div>
+    <div class="d3-ritual-list" id="d3-rituals-done">
+      <div class="d3-ritual-row done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d3-ritual-text">Sortir les poubelles</span>
+      </div>
+      <div class="d3-ritual-row done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d3-ritual-text">Lancer une machine</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="d3-slide-handle">
+    <div class="handle-bar"></div>
+    <span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      Demander a l'assistant
+    </span>
+  </div>
+
+  <div class="peek-hint d3-peek"></div>
+</div>
+</div>
+</div>
+
+<!-- ===================== DIRECTION 4: KIOSK-FIRST ===================== -->
+<div class="direction" id="dir4">
+<div class="phone-frame">
+<div class="d4-screen">
+  <div class="status-bar d4-status">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#1A1A1A"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D1D5DB"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#1A1A1A" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#1A1A1A"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#1A1A1A"/></svg>
+    </div>
+  </div>
+
+  <div class="d4-header">
+    <div class="d4-moment-label">Matin</div>
+    <div class="d4-member-label">
+      <span class="d4-member-dot"></span>
+      Sophie
+    </div>
+  </div>
+
+  <div class="d4-body" id="d4-rituals">
+    <div class="d4-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d4-ritual-text">Preparer les cartables</span>
+    </div>
+    <div class="d4-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d4-ritual-text">Petit-dejeuner en famille</span>
+    </div>
+    <div class="d4-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d4-ritual-text">Verifier les devoirs de Lucas</span>
+    </div>
+    <div class="d4-ritual-row done" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check" checked>
+      <span class="d4-ritual-text">Sortir les poubelles</span>
+    </div>
+    <div class="d4-ritual-row done" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check" checked>
+      <span class="d4-ritual-text">Lancer une machine</span>
+    </div>
+  </div>
+
+  <div class="d4-fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  </div>
+
+  <div class="peek-hint d4-peek"></div>
+</div>
+</div>
+</div>
+
+<!-- ===================== DIRECTION 5: CONTEXTUEL IMMERSIF ===================== -->
+<div class="direction" id="dir5">
+<div class="phone-frame">
+<div class="d5-screen">
+  <div class="d5-atmosphere">
+    <div class="d5-atmosphere-orb"></div>
+  </div>
+
+  <div class="status-bar d5-status" style="position:relative;z-index:1;">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span style="color:#8A7A52;">&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#8A7A52"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#8A7A52"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#8A7A52"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D4C8A8"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#8A7A52" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#8A7A52"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#8A7A52"/></svg>
+    </div>
+  </div>
+
+  <div class="d5-content">
+    <div class="d5-header">
+      <div class="d5-time-indicator">
+        <div class="d5-time-dot"></div>
+        <span class="d5-time-text">Matin</span>
+        <div class="d5-time-line"></div>
+      </div>
+      <div class="d5-greeting">Bonjour,<br><strong>Sophie</strong></div>
+    </div>
+
+    <div class="d5-rituals" id="d5-rituals">
+      <div class="d5-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d5-ritual-text">Preparer les cartables</span>
+      </div>
+      <div class="d5-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d5-ritual-text">Petit-dejeuner en famille</span>
+      </div>
+      <div class="d5-ritual-item" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check">
+        <span class="d5-ritual-text">Verifier les devoirs de Lucas</span>
+      </div>
+      <div class="d5-ritual-item done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d5-ritual-text">Sortir les poubelles</span>
+      </div>
+      <div class="d5-ritual-item done" onclick="toggleRitual(this)">
+        <input type="checkbox" class="ritual-check" checked>
+        <span class="d5-ritual-text">Lancer une machine</span>
+      </div>
+    </div>
+
+    <div class="d5-ai-whisper">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <span>Lucas a un controle jeudi — peut-etre revoir les exercices ce soir ?</span>
+    </div>
+  </div>
+
+  <div class="peek-hint d5-peek"></div>
+</div>
+</div>
+</div>
+
+<!-- ===================== DIRECTION 6: HYBRIDE EPURE ===================== -->
+<div class="direction" id="dir6">
+<div class="phone-frame">
+<div class="d6-screen">
+  <div class="status-bar d6-status">
+    <span class="time">8:12</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;</span>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="0" y="3" width="3" height="9" rx="1" fill="#1A1A1A"/><rect x="4.5" y="1.5" width="3" height="10.5" rx="1" fill="#1A1A1A"/><rect x="9" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/><rect x="13" y="2" width="3" height="10" rx="1" fill="#D1D5DB"/></svg>
+      <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0" y="0" width="19" height="11" rx="2" stroke="#1A1A1A" stroke-width="1"/><rect x="1.5" y="1.5" width="14" height="8" rx="1" fill="#1A1A1A"/><rect x="20" y="3.5" width="2" height="4" rx="1" fill="#1A1A1A"/></svg>
+    </div>
+  </div>
+
+  <div class="d6-header">
+    <div class="d6-header-row">
+      <div class="d6-member-section">
+        <div class="d6-color-accent"></div>
+        <div class="d6-member-info">
+          <h2>Sophie</h2>
+          <span>Vendredi 7 fevrier</span>
+        </div>
+      </div>
+      <div class="d6-dots-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+      </div>
+    </div>
+    <div class="d6-moment-pills">
+      <div class="d6-moment-chip active">Matin</div>
+      <div class="d6-moment-chip">Midi</div>
+      <div class="d6-moment-chip">Soir</div>
+    </div>
+  </div>
+
+  <div class="d6-body" id="d6-rituals">
+    <div class="d6-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d6-ritual-text">Preparer les cartables</span>
+    </div>
+    <div class="d6-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d6-ritual-text">Petit-dejeuner en famille</span>
+    </div>
+    <div class="d6-ritual-row" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check">
+      <span class="d6-ritual-text">Verifier les devoirs de Lucas</span>
+    </div>
+    <div class="d6-ritual-row done" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check" checked>
+      <span class="d6-ritual-text">Sortir les poubelles</span>
+    </div>
+    <div class="d6-ritual-row done" onclick="toggleRitual(this)">
+      <input type="checkbox" class="ritual-check" checked>
+      <span class="d6-ritual-text">Lancer une machine</span>
+    </div>
+  </div>
+
+  <div class="d6-bottombar">
+    <div class="d6-bar-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      <span>Rituels</span>
+    </div>
+    <div class="d6-bar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <span>Famille</span>
+    </div>
+    <div class="d6-bar-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <span>Assistant</span>
+    </div>
+  </div>
+
+  <div class="peek-hint d6-peek"></div>
+</div>
+</div>
+</div>
+
+</div><!-- /phone-container -->
+
+<!-- ==========================================
+     JAVASCRIPT
+     ========================================== -->
+<script>
+  // Direction metadata
+  const dirMeta = {
+    1: {
+      title: 'Bullet Journal',
+      subtitle: 'Ultra-minimal, typographique — le texte est l\'interface',
+      keywords: ['Minimaliste', 'Typographique', 'Paper-like', 'Things 3', 'Bear']
+    },
+    2: {
+      title: 'Tableau Familial',
+      subtitle: 'Cartes chaleureuses avec ombres douces et coins arrondis',
+      keywords: ['Cartes', 'Chaleureux', 'Accessible', 'Familial', 'Barre d\'outils']
+    },
+    3: {
+      title: 'Dashboard Moderne',
+      subtitle: 'Structure claire, informatif, style outil de productivite',
+      keywords: ['Structuré', 'Productivite', 'Progression', 'Linear', 'Notion']
+    },
+    4: {
+      title: 'Kiosk-First',
+      subtitle: 'Texte large, cibles tactiles genereuses, lisible a distance',
+      keywords: ['Bold', 'Grand texte', 'Touch-friendly', 'Kiosk', 'Lisibilite']
+    },
+    5: {
+      title: 'Contextuel Immersif',
+      subtitle: 'Le theme temporel est le heros — atmosphere et emotion',
+      keywords: ['Atmospherique', 'Emotionnel', 'Gradient', 'Immersif', 'Contextuel']
+    },
+    6: {
+      title: 'Hybride Epure',
+      subtitle: 'Le juste milieu — propre, chaleureux, fonctionnel, equilibre',
+      keywords: ['Equilibre', 'Propre', 'Poli', 'Fonctionnel', 'Synthese']
+    }
+  };
+
+  // Switch direction
+  function switchDirection(num) {
+    // Update pills
+    document.querySelectorAll('.dir-pill').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.dir-pill[data-dir="${num}"]`).classList.add('active');
+
+    // Update mockup visibility
+    document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+    document.getElementById(`dir${num}`).classList.add('active');
+
+    // Update meta
+    const meta = dirMeta[num];
+    const metaEl = document.getElementById('dirMeta');
+    metaEl.innerHTML = `
+      <h2>Direction ${num} : ${meta.title}</h2>
+      <div class="dir-subtitle">${meta.subtitle}</div>
+      <div class="dir-keywords">
+        ${meta.keywords.map(k => `<span class="keyword">${k}</span>`).join('')}
+      </div>
+    `;
+
+    // Scroll pill into view
+    const pill = document.querySelector(`.dir-pill[data-dir="${num}"]`);
+    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  // Toggle ritual checked state
+  function toggleRitual(el) {
+    const checkbox = el.querySelector('.ritual-check');
+    if (!checkbox) return;
+
+    // Toggle
+    checkbox.checked = !checkbox.checked;
+
+    if (checkbox.checked) {
+      el.classList.add('done');
+    } else {
+      el.classList.remove('done');
+    }
+
+    // Re-sort: move done items to bottom within their parent
+    const parent = el.parentElement;
+    if (!parent) return;
+
+    const items = Array.from(parent.children).filter(c =>
+      c.classList.contains('d1-ritual-item') ||
+      c.classList.contains('d2-card') ||
+      c.classList.contains('d4-ritual-row') ||
+      c.classList.contains('d5-ritual-item') ||
+      c.classList.contains('d6-ritual-row')
+    );
+
+    if (items.length > 0) {
+      const undone = items.filter(i => !i.classList.contains('done'));
+      const done = items.filter(i => i.classList.contains('done'));
+      undone.forEach(i => parent.appendChild(i));
+      done.forEach(i => parent.appendChild(i));
+    }
+
+    // Update D3 progress if applicable
+    updateD3Progress();
+  }
+
+  // D3 progress updater
+  function updateD3Progress() {
+    const todoContainer = document.getElementById('d3-rituals-todo');
+    const doneContainer = document.getElementById('d3-rituals-done');
+    if (!todoContainer || !doneContainer) return;
+
+    const allRows = document.querySelectorAll('#dir3 .d3-ritual-row');
+    const doneCount = document.querySelectorAll('#dir3 .d3-ritual-row.done').length;
+    const total = allRows.length;
+
+    const fill = document.getElementById('d3-progress-fill');
+    const text = document.getElementById('d3-progress-text');
+    if (fill) fill.style.width = `${(doneCount / total) * 100}%`;
+    if (text) text.textContent = `${doneCount} / ${total}`;
+  }
+
+  // Initialize meta display
+  switchDirection(1);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/
+
+# Temp
+*.tmp
+*.temp
