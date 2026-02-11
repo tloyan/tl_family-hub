@@ -1,0 +1,112 @@
+# generated: 2026-02-09
+# project: family-hub
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-09
+project: family-hub
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ── Epic 1: Fondation, Authentification & Foyer familial ──
+  epic-1: backlog
+  1-1-initialisation-monorepo-ci-cd-et-deploiement: backlog
+  1-2-authentification-securisee-google-oauth-magic-link: backlog
+  1-3-creation-de-foyer-et-modele-de-donnees-familial: backlog
+  1-4-invitation-de-membres-et-rejoindre-un-foyer: backlog
+  1-5-roles-permissions-et-gestion-des-membres: backlog
+  1-6-profil-enfant-consentement-parental-et-permissions-progressives: backlog
+  1-7-acces-prestataire: backlog
+  1-8-fiches-membres: backlog
+  epic-1-retrospective: optional
+
+  # ── Epic 2: Rituels quotidiens & Vue colonnes ──
+  epic-2: backlog
+  2-1-crud-rituels-et-moteur-de-recurrence: backlog
+  2-2-consultation-et-validation-des-rituels-du-jour: backlog
+  2-3-synchronisation-temps-reel-des-statuts: backlog
+  2-4-vue-colonnes-par-membre-et-home-hub: backlog
+  2-5-profils-visuels-adaptatifs-enfants-et-pictogrammes: backlog
+  2-6-vue-prestataire-restreinte: backlog
+  2-7-recapitulatif-hebdomadaire: backlog
+  epic-2-retrospective: optional
+
+  # ── Epic 3: Intelligence Artificielle & Onboarding ──
+  epic-3: backlog
+  3-1-module-ia-backend-interface-chat-et-interaction-vocale: backlog
+  3-2-crud-rituels-par-langage-naturel-via-ia: backlog
+  3-3-questions-contextuelles-et-aide-integree: backlog
+  3-4-guardrails-ia-filtrage-mineurs-et-contraintes-par-role: backlog
+  3-5-onboarding-intelligent: backlog
+  epic-3-retrospective: optional
+
+  # ── Epic 4: Notifications intelligentes ──
+  epic-4: backlog
+  4-1-infrastructure-notifications-push-et-moteur-de-regles: backlog
+  4-2-rappels-de-rituels-groupes-par-moment: backlog
+  4-3-notification-de-completion-100-enfant: backlog
+  4-4-preferences-et-controle-parental-des-notifications: backlog
+  epic-4-retrospective: optional
+
+  # ── Epic 5: Mode Offline & Synchronisation ──
+  epic-5: backlog
+  5-1-cache-offline-et-consultation-des-rituels-hors-ligne: backlog
+  5-2-mutations-hors-ligne-et-synchronisation-automatique: backlog
+  5-3-indicateur-visuel-d-etat-de-connexion: backlog
+  5-4-resolution-de-conflits-deterministe: backlog
+  epic-5-retrospective: optional
+
+  # ── Epic 6: Conformité RGPD & Gestion des données ──
+  epic-6: backlog
+  6-1-module-compliance-collecte-minimale-et-chiffrement: backlog
+  6-2-export-des-donnees-personnelles-droit-a-la-portabilite: backlog
+  6-3-suppression-de-compte-et-anonymisation-droit-a-l-oubli: backlog
+  6-4-gestion-profil-enfant-suppression-et-acces-parental: backlog
+  epic-6-retrospective: optional
+
+  # ── Epic 7: Administration & Opérations ──
+  epic-7: backlog
+  7-1-deploiement-ota-et-pipeline-de-release-mobile: backlog
+  7-2-monitoring-erreurs-performances-et-logs: backlog
+  7-3-dashboard-metriques-business-et-feature-flags: backlog
+  epic-7-retrospective: optional
+
+  # ── Epic 8: Système de demandes familiales ──
+  epic-8: backlog
+  8-1-creation-de-demandes-manuelles: backlog
+  8-2-consultation-et-gestion-des-demandes: backlog
+  8-3-notifications-des-demandes: backlog
+  8-4-demandes-d-autorisation-via-l-ia: backlog
+  epic-8-retrospective: optional
