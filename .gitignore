@@ -34,3 +34,15 @@ coverage/
 # Temp
 *.tmp
 *.temp
+
+# Turborepo
+.turbo/
+
+# Vercel
+.vercel/
+
+# Expo
+.expo/
+
+# Prisma
+prisma/generated/

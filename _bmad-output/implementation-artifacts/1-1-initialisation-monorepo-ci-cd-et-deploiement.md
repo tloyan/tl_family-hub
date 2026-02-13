@@ -58,12 +58,12 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 : Initialisation Monorepo Turborepo + pnpm** (AC: #1)
-  - [ ] 1.1 Creer le monorepo : `npx create-turbo@latest family-hub --package-manager pnpm`
-  - [ ] 1.2 Configurer `pnpm-workspace.yaml` avec `apps/*` et `packages/*`
-  - [ ] 1.3 Configurer `turbo.json` avec les pipelines `build`, `dev`, `lint`, `typecheck`, `test`
-  - [ ] 1.4 Ajouter le champ `packageManager` dans le `package.json` racine (pnpm 10.x)
-  - [ ] 1.5 Creer `.gitignore`, `.prettierrc`, `.env.example` a la racine
+- [x] **Task 1 : Initialisation Monorepo Turborepo + pnpm** (AC: #1)
+  - [x] 1.1 Creer le monorepo : `npx create-turbo@latest family-hub --package-manager pnpm`
+  - [x] 1.2 Configurer `pnpm-workspace.yaml` avec `apps/*` et `packages/*`
+  - [x] 1.3 Configurer `turbo.json` avec les pipelines `build`, `dev`, `lint`, `typecheck`, `test`
+  - [x] 1.4 Ajouter le champ `packageManager` dans le `package.json` racine (pnpm 10.x)
+  - [x] 1.5 Creer `.gitignore`, `.prettierrc`, `.env.example` a la racine
 
 - [ ] **Task 2 : Creer les 3 applications** (AC: #1)
   - [ ] 2.1 `apps/api/` — NestJS avec TypeScript strict, GraphQL schema-first (`@nestjs/graphql` + `typePaths`)
