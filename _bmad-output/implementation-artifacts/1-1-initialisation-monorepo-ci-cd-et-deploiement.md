@@ -65,10 +65,10 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 1.4 Ajouter le champ `packageManager` dans le `package.json` racine (pnpm 10.x)
   - [x] 1.5 Creer `.gitignore`, `.prettierrc`, `.env.example` a la racine
 
-- [ ] **Task 2 : Creer les 3 applications** (AC: #1)
+- [x] **Task 2 : Creer les 3 applications** (AC: #1)
   - [x] 2.1 `apps/api/` — NestJS avec TypeScript strict, GraphQL code-first (`@nestjs/graphql` + `autoSchemaFile`)
   - [x] 2.2 `apps/web/` — Next.js 16 avec App Router, Tailwind CSS v4, ShadCN UI
-  - [ ] 2.3 `apps/mobile/` — Expo SDK 54 avec Expo Router, NativeWind v4, React Native Reusables
+  - [x] 2.3 `apps/mobile/` — Expo SDK 54 avec Expo Router, NativeWind v4, React Native Reusables
 
 - [ ] **Task 3 : Creer les 10 packages partages** (AC: #1)
   - [ ] 3.1 `packages/shared/` — Types, constantes, validations Zod, enums partages

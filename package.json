@@ -23,6 +23,7 @@
       "@apollo/protobufjs",
       "@nestjs/core",
       "esbuild",
+      "expo-modules-core",
       "sharp"
     ]
   }
