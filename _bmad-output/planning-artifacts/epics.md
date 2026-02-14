@@ -167,7 +167,7 @@ This document provides the complete epic and story breakdown for family-hub, dec
 - Starter Template : Custom Monorepo Setup base sur Turborepo + pnpm (`npx create-turbo@latest family-home --package-manager pnpm`). Aucun starter existant ne correspond — setup incrementiel.
 - Stack technologique : TypeScript strict end-to-end, Next.js (web), Expo (mobile), NestJS (backend), PostgreSQL via Supabase (DB), Prisma (ORM), Better Auth, ShadCN UI + Tailwind (web), React Native Reusables + NativeWind (mobile), Strapi Cloud (CMS marketing/blog/legal)
 - Architecture globale : Monolithe modulaire event-driven + CQRS progressif (`@nestjs/cqrs`)
-- API : GraphQL schema-first (`@nestjs/graphql` + `typePaths`), `graphql-codegen` pour types TS + hooks Apollo, GraphQL Subscriptions + `graphql-redis-subscriptions`
+- API : GraphQL code-first (`@nestjs/graphql` + `autoSchemaFile`), `graphql-codegen` pour hooks Apollo Client (frontend uniquement), GraphQL Subscriptions + `graphql-redis-subscriptions`
 - Auth : Better Auth (Social OAuth Google/Apple + Magic Link/OTP), PBAC hybride (RBAC + ABAC + ReBAC), permissions instance-level par enfant, Prisma Client Extension pour isolation foyer automatique
 - State management : Apollo Client (etat serveur, optimistic UI, subscriptions, offline) + Zustand (etat client local ~1KB)
 - Offline : Mobile complet (`apollo3-cache-persist` + queue mutations + OCC), Web lecture seule
