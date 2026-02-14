@@ -22,7 +22,8 @@
     "onlyBuiltDependencies": [
       "@apollo/protobufjs",
       "@nestjs/core",
-      "esbuild"
+      "esbuild",
+      "sharp"
     ]
   }
 }

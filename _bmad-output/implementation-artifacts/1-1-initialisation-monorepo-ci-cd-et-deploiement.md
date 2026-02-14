@@ -67,7 +67,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 - [ ] **Task 2 : Creer les 3 applications** (AC: #1)
   - [x] 2.1 `apps/api/` — NestJS avec TypeScript strict, GraphQL code-first (`@nestjs/graphql` + `autoSchemaFile`)
-  - [ ] 2.2 `apps/web/` — Next.js 16 avec App Router, Tailwind CSS v4, ShadCN UI
+  - [x] 2.2 `apps/web/` — Next.js 16 avec App Router, Tailwind CSS v4, ShadCN UI
   - [ ] 2.3 `apps/mobile/` — Expo SDK 54 avec Expo Router, NativeWind v4, React Native Reusables
 
 - [ ] **Task 3 : Creer les 10 packages partages** (AC: #1)
