@@ -66,7 +66,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 1.5 Creer `.gitignore`, `.prettierrc`, `.env.example` a la racine
 
 - [ ] **Task 2 : Creer les 3 applications** (AC: #1)
-  - [ ] 2.1 `apps/api/` — NestJS avec TypeScript strict, GraphQL code-first (`@nestjs/graphql` + `autoSchemaFile`)
+  - [x] 2.1 `apps/api/` — NestJS avec TypeScript strict, GraphQL code-first (`@nestjs/graphql` + `autoSchemaFile`)
   - [ ] 2.2 `apps/web/` — Next.js 16 avec App Router, Tailwind CSS v4, ShadCN UI
   - [ ] 2.3 `apps/mobile/` — Expo SDK 54 avec Expo Router, NativeWind v4, React Native Reusables
 
