@@ -78,8 +78,8 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [ ] 3.5 `packages/ui-native/` — Setup React Native Reusables + NativeWind
   - [ ] 3.6 `packages/tokens/` — Design tokens (colors, typography, spacing, moments temporels)
   - [ ] 3.7 `packages/api-client/` — Apollo Client 4 configuration + `graphql-codegen`
-  - [ ] 3.8 `packages/config-eslint/` — Config ESLint partagee (regle dot-notation fichiers)
-  - [ ] 3.9 `packages/config-ts/` — Config TypeScript partagee (`strict: true`, zero `any`)
+  - [x] 3.8 `packages/config-eslint/` — Config ESLint partagee (regle dot-notation fichiers)
+  - [x] 3.9 `packages/config-ts/` — Config TypeScript partagee (`strict: true`, zero `any`)
   - [ ] 3.10 `packages/config-tailwind/` — Config Tailwind partagee avec tokens custom
 
 - [ ] **Task 4 : Docker Compose local** (AC: #2)

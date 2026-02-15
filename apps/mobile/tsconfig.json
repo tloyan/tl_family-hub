@@ -1,7 +1,6 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": ["expo/tsconfig.base", "@family-hub/config-ts/expo.json"],
   "compilerOptions": {
-    "strict": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
