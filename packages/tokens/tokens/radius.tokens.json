@@ -1,0 +1,7 @@
+{
+  "radius-sm": { "$type": "dimension", "$value": "4px" },
+  "radius-md": { "$type": "dimension", "$value": "8px" },
+  "radius-lg": { "$type": "dimension", "$value": "12px" },
+  "radius-xl": { "$type": "dimension", "$value": "16px" },
+  "radius-full": { "$type": "dimension", "$value": "9999px" }
+}

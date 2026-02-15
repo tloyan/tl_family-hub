@@ -9,7 +9,10 @@ module.exports = {
     "./features/**/*.{ts,tsx}",
     "./lib/**/*.{ts,tsx}",
   ],
-  presets: [require("nativewind/preset")],
+  presets: [
+    require("nativewind/preset"),
+    require("@family-hub/tokens/tailwind-preset"),
+  ],
   theme: {
     extend: {
       colors: {

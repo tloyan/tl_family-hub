@@ -1,3 +1,4 @@
+@import "@family-hub/tokens/css";
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -112,6 +113,36 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: var(--font-inter);
+
+  /* Family Hub neutral colors */
+  --color-fh-bg-primary: var(--fh-bg-primary);
+  --color-fh-bg-secondary: var(--fh-bg-secondary);
+  --color-fh-bg-elevated: var(--fh-bg-elevated);
+  --color-fh-text-primary: var(--fh-text-primary);
+  --color-fh-text-secondary: var(--fh-text-secondary);
+  --color-fh-text-muted: var(--fh-text-muted);
+  --color-fh-border-default: var(--fh-border-default);
+  --color-fh-border-subtle: var(--fh-border-subtle);
+
+  /* Family Hub member colors */
+  --color-fh-member-1: var(--fh-member-1);
+  --color-fh-member-2: var(--fh-member-2);
+  --color-fh-member-3: var(--fh-member-3);
+  --color-fh-member-4: var(--fh-member-4);
+  --color-fh-member-5: var(--fh-member-5);
+  --color-fh-member-6: var(--fh-member-6);
+
+  /* Family Hub semantic colors */
+  --color-fh-success: var(--fh-success);
+  --color-fh-warning: var(--fh-warning);
+  --color-fh-error: var(--fh-error);
+  --color-fh-info: var(--fh-info);
+
+  /* Family Hub moment colors */
+  --color-fh-moment-morning: var(--fh-moment-morning);
+  --color-fh-moment-midday: var(--fh-moment-midday);
+  --color-fh-moment-evening: var(--fh-moment-evening);
+  --color-fh-moment-night: var(--fh-moment-night);
 }
 
 @layer base {
