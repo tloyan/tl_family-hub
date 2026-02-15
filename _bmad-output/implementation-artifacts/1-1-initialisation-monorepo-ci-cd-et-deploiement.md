@@ -72,7 +72,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 - [ ] **Task 3 : Creer les 10 packages partages** (AC: #1)
   - [x] 3.1 `packages/shared/` — Types, constantes, validations Zod, enums partages
-  - [ ] 3.2 `packages/db/` — Schema Prisma organise par domaine (`prismaSchemaFolder`), `base.prisma` + migrations + seed.ts
+  - [x] 3.2 `packages/db/` — Schema Prisma organise par domaine (`prismaSchemaFolder`), `base.prisma` + migrations + seed.ts
   - [ ] 3.3 `packages/auth/` — Configuration Better Auth partagee (OAuth Google + Magic Link)
   - [!] 3.4 `packages/ui/` — Setup ShadCN UI (composants web, Radix UI, Lucide Icons)
   - [!] 3.5 `packages/ui-native/` — Setup React Native Reusables + NativeWind

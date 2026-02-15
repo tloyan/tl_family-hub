@@ -4,6 +4,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { HealthModule } from './modules/health/health.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HealthModule } from './modules/health/health.module';
       autoSchemaFile: join(process.cwd(), 'schema.gql'),
       sortSchema: true,
     }),
+    PrismaModule,
     HealthModule,
   ],
 })

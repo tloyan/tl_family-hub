@@ -30,7 +30,10 @@
     "pino-http": "^10.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
-    "@family-hub/shared": "workspace:*"
+    "@family-hub/db": "workspace:*",
+    "@family-hub/shared": "workspace:*",
+    "@prisma/adapter-pg": "^7.2.0",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "@family-hub/config-eslint": "workspace:*",
@@ -43,6 +46,7 @@
     "pino-pretty": "^13.0.0",
     "ts-morph": "^25.0.0",
     "ts-node": "^10.9.0",
+    "@types/pg": "^8.15.0",
     "eslint": "^9.0.0",
     "typescript": "^5.8.0",
     "vitest": "^4.0.0"

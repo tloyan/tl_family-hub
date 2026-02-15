@@ -11,7 +11,12 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
+    "db:generate": "turbo run db:generate --filter=@family-hub/db",
+    "db:migrate:dev": "turbo run db:migrate:dev --filter=@family-hub/db",
+    "db:push": "turbo run db:push --filter=@family-hub/db",
+    "db:seed": "turbo run db:seed --filter=@family-hub/db",
+    "db:studio": "turbo run db:studio --filter=@family-hub/db"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
@@ -26,8 +31,10 @@
     "onlyBuiltDependencies": [
       "@apollo/protobufjs",
       "@nestjs/core",
+      "@prisma/engines",
       "esbuild",
       "expo-modules-core",
+      "prisma",
       "sharp"
     ]
   }

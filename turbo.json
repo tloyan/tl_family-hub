@@ -6,7 +6,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**", "src/generated/**"],
       "env": ["DATABASE_URL", "NEXT_PUBLIC_*"]
     },
     "dev": {
@@ -24,6 +24,22 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
       "env": ["DATABASE_URL"]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate:dev": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
