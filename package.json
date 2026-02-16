@@ -28,6 +28,11 @@
       "react": "19.1.0",
       "react-dom": "19.1.0"
     },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "apollo3-cache-persist>@apollo/client": "4"
+      }
+    },
     "onlyBuiltDependencies": [
       "@apollo/protobufjs",
       "@nestjs/core",

@@ -19,6 +19,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.4.0",
+    "@apollo/client": "^4.0.0",
+    "graphql": "^16.10.0",
     "@family-hub/shared": "workspace:*",
     "@family-hub/tokens": "workspace:*"
   },

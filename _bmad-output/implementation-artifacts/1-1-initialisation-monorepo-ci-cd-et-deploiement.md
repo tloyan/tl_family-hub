@@ -70,14 +70,14 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 2.2 `apps/web/` — Next.js 16 avec App Router, Tailwind CSS v4, ShadCN UI
   - [x] 2.3 `apps/mobile/` — Expo SDK 54 avec Expo Router, NativeWind v4, React Native Reusables
 
-- [ ] **Task 3 : Creer les 10 packages partages** (AC: #1)
+- [x] **Task 3 : Creer les 10 packages partages** (AC: #1)
   - [x] 3.1 `packages/shared/` — Types, constantes, validations Zod, enums partages
   - [x] 3.2 `packages/db/` — Schema Prisma organise par domaine (`prismaSchemaFolder`), `base.prisma` + migrations + seed.ts
-  - [ ] 3.3 `packages/auth/` — Configuration Better Auth partagee (OAuth Google + Magic Link)
+  - [!] 3.3 `packages/auth/` — Configuration Better Auth partagee (OAuth Google + Magic Link)
   - [!] 3.4 `packages/ui/` — Setup ShadCN UI (composants web, Radix UI, Lucide Icons)
   - [!] 3.5 `packages/ui-native/` — Setup React Native Reusables + NativeWind
   - [x] 3.6 `packages/tokens/` — Design tokens (colors, typography, spacing, moments temporels)
-  - [ ] 3.7 `packages/api-client/` — Apollo Client 4 configuration + `graphql-codegen`
+  - [!] 3.7 `packages/api-client/` — Apollo Client 4 configuration + `graphql-codegen`
   - [x] 3.8 `packages/config-eslint/` — Config ESLint partagee (regle dot-notation fichiers)
   - [x] 3.9 `packages/config-ts/` — Config TypeScript partagee (`strict: true`, zero `any`)
   - [!] 3.10 `packages/config-tailwind/` — Config Tailwind partagee avec tokens custom
