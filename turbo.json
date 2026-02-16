@@ -7,7 +7,14 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**", "src/generated/**"],
-      "env": ["DATABASE_URL", "NEXT_PUBLIC_*"]
+      "env": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "PORT",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_*"
+      ]
     },
     "dev": {
       "dependsOn": ["^build"],
