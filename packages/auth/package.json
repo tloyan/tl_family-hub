@@ -1,0 +1,64 @@
+{
+  "name": "@family-hub/auth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Better Auth shared configuration for Family Hub",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./server": {
+      "import": {
+        "types": "./dist/server.d.mts",
+        "default": "./dist/server.mjs"
+      },
+      "require": {
+        "types": "./dist/server.d.cts",
+        "default": "./dist/server.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/client.d.mts",
+        "default": "./dist/client.mjs"
+      },
+      "require": {
+        "types": "./dist/client.d.cts",
+        "default": "./dist/client.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "better-auth": "^1.4.18"
+  },
+  "peerDependencies": {
+    "@family-hub/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@family-hub/config-eslint": "workspace:*",
+    "@family-hub/config-ts": "workspace:*",
+    "@family-hub/db": "workspace:*",
+    "eslint": "^9.0.0",
+    "tsdown": "^0.20.0",
+    "typescript": "^5.8.0"
+  }
+}
