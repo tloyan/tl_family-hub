@@ -90,11 +90,11 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 4.3 Verifier que `docker compose up` demarre correctement et que les services sont accessibles
 
 - [ ] **Task 5 : CI/CD GitHub Actions** (AC: #3)
-  - [ ] 5.1 Creer `.github/workflows/ci.yml` : Push/PR → Lint + TS check + Tests + Build
+  - [x] 5.1 Creer `.github/workflows/ci.yml` : Push/PR → Lint + TS check + Tests + Build
   - [ ] 5.2 Creer `.github/workflows/deploy-api.yml` : Deploy NestJS → Railway
   - [ ] 5.3 Creer `.github/workflows/deploy-web.yml` : Deploy Next.js → Vercel (auto)
-  - [ ] 5.4 Creer `.github/workflows/codeql.yml` : Security scanning
-  - [ ] 5.5 Configurer Dependabot + Secret Scanning
+  - [x] 5.4 Creer `.github/workflows/codeql.yml` : Security scanning
+  - [x] 5.5 Configurer Dependabot + Secret Scanning
 
 - [ ] **Task 6 : Deploiement Infrastructure Cloud** (AC: #4, #5)
   - [ ] 6.1 Configurer Supabase Pro (EU Frankfurt) — PostgreSQL + Storage
