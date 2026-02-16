@@ -84,10 +84,10 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 3.9 `packages/config-ts/` — Config TypeScript partagee (`strict: true`, zero `any`)
   - [!] 3.10 `packages/config-tailwind/` — Config Tailwind partagee avec tokens custom
 
-- [ ] **Task 4 : Docker Compose local** (AC: #2)
-  - [ ] 4.1 Creer `docker/docker-compose.yml` avec PostgreSQL + Redis
-  - [ ] 4.2 Creer `docker/api.Dockerfile` pour build NestJS (Railway)
-  - [ ] 4.3 Verifier que `docker compose up` demarre correctement et que les services sont accessibles
+- [x] **Task 4 : Docker Compose local** (AC: #2)
+  - [x] 4.1 Creer `docker/docker-compose.yml` avec PostgreSQL + Redis
+  - [x] 4.2 Creer `docker/api.Dockerfile` pour build NestJS (Railway)
+  - [x] 4.3 Verifier que `docker compose up` demarre correctement et que les services sont accessibles
 
 - [ ] **Task 5 : CI/CD GitHub Actions** (AC: #3)
   - [ ] 5.1 Creer `.github/workflows/ci.yml` : Push/PR → Lint + TS check + Tests + Build

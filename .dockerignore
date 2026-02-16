@@ -1,0 +1,14 @@
+node_modules
+.git
+.gitignore
+.turbo
+dist
+build
+.next
+.env
+.env.*
+!.env.example
+_bmad-output
+.claude
+*.md
+LICENSE
