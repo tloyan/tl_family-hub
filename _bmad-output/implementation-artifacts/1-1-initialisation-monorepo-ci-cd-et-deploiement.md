@@ -17,6 +17,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 **Given** le projet n'existe pas encore
 **When** j'initialise le monorepo avec Turborepo + pnpm
 **Then** la structure contient :
+
 - `apps/` avec `api` (NestJS), `web` (Next.js), `mobile` (Expo)
 - `packages/` avec `shared`, `db`, `auth`, `ui`, `ui-native`, `tokens`, `api-client`, `config-eslint`, `config-ts`, `config-tailwind`
 - Chaque app et package a son propre `package.json` et `tsconfig.json`
@@ -51,6 +52,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 **Given** le monorepo est initialise
 **When** je verifie la configuration
 **Then** :
+
 - Doppler est configure pour la gestion des secrets (integration GitHub Actions + Railway + Vercel)
 - Husky + commitlint sont actifs (pre-commit lint-staged, commit-msg commitlint)
 - `.env.example` est present avec les variables necessaires documentees
@@ -103,8 +105,8 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 - [ ] **Task 7 : Secrets et Outils Dev** (AC: #6)
   - [ ] 7.1 Configurer Doppler pour secrets management (integration GitHub Actions + Railway + Vercel)
-  - [ ] 7.2 Configurer Husky : pre-commit (lint-staged) + commit-msg (commitlint)
-  - [ ] 7.3 Creer `commitlint.config.js` avec conventional commits
+  - [x] 7.2 Configurer Husky : pre-commit (lint-staged) + commit-msg (commitlint)
+  - [x] 7.3 Creer `commitlint.config.js` avec conventional commits
   - [ ] 7.4 Configurer SonarCloud pour quality gate + couverture
   - [ ] 7.5 Documenter `.env.example` avec toutes les variables necessaires
 
@@ -120,24 +122,24 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 ### Stack Technique et Versions (Fevrier 2026)
 
-| Technologie | Version | Notes Critiques |
-|---|---|---|
-| **Turborepo** | 2.8.x | Devtools + composable configs stables |
-| **pnpm** | 10.x | Drop Node 16. Ajouter `packageManager` dans package.json racine |
-| **NestJS** | 11.x | **BREAKING:** Express v5 par defaut. Path matching modifie (`/users/*` → `/users/*path`). CacheModule utilise Keyv |
-| **Next.js** | 16.x | **BREAKING:** APIs async obligatoires (cookies, headers, params). AMP supprime. Turbopack FS caching stable |
-| **Expo SDK** | 54 (stable) | SDK 55 en beta. Utiliser SDK 54 pour la production |
-| **Prisma** | 7.x | **BREAKING:** Reecrit en TypeScript (plus de Rust). ESM-only. Config dans `prisma.config.ts`. Driver adapters requis |
-| **Better Auth** | 1.4.x | Stable. OAuth Google + Magic Link/OTP |
-| **Apollo Client** | 4.x | **BREAKING:** Imports React dans `@apollo/client/react`. RxJS en peer dep. Codemod dispo |
-| **Vitest** | 4.x | Requiert Vite 7. Browser Mode stable |
-| **Playwright** | 1.58.x | Stable, pas de breaking changes |
-| **ShadCN UI** | CLI 3.8.x | `npx shadcn@latest add`. Package `radix-ui` unifie |
-| **Tailwind CSS** | 4.x | **BREAKING:** Plus de `tailwind.config.js`. Config via CSS `@theme`. Oxide engine (5x plus rapide) |
-| **NativeWind** | 4.2.x | **ATTENTION:** v4.x requiert Tailwind CSS **v3.4.x** (PAS v4). Config Tailwind separee pour mobile |
-| **TypeScript** | 5.9.x | Stable. TS 7 (Go) en preview, pas encore pret |
-| **Docker Compose** | v5.x | Identique a v2 en CLI, SDK Go ajoute |
-| **GraphQL Codegen** | CLI 6.x | `@graphql-codegen/client-preset` pour typed document nodes |
+| Technologie         | Version     | Notes Critiques                                                                                                      |
+| ------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Turborepo**       | 2.8.x       | Devtools + composable configs stables                                                                                |
+| **pnpm**            | 10.x        | Drop Node 16. Ajouter `packageManager` dans package.json racine                                                      |
+| **NestJS**          | 11.x        | **BREAKING:** Express v5 par defaut. Path matching modifie (`/users/*` → `/users/*path`). CacheModule utilise Keyv   |
+| **Next.js**         | 16.x        | **BREAKING:** APIs async obligatoires (cookies, headers, params). AMP supprime. Turbopack FS caching stable          |
+| **Expo SDK**        | 54 (stable) | SDK 55 en beta. Utiliser SDK 54 pour la production                                                                   |
+| **Prisma**          | 7.x         | **BREAKING:** Reecrit en TypeScript (plus de Rust). ESM-only. Config dans `prisma.config.ts`. Driver adapters requis |
+| **Better Auth**     | 1.4.x       | Stable. OAuth Google + Magic Link/OTP                                                                                |
+| **Apollo Client**   | 4.x         | **BREAKING:** Imports React dans `@apollo/client/react`. RxJS en peer dep. Codemod dispo                             |
+| **Vitest**          | 4.x         | Requiert Vite 7. Browser Mode stable                                                                                 |
+| **Playwright**      | 1.58.x      | Stable, pas de breaking changes                                                                                      |
+| **ShadCN UI**       | CLI 3.8.x   | `npx shadcn@latest add`. Package `radix-ui` unifie                                                                   |
+| **Tailwind CSS**    | 4.x         | **BREAKING:** Plus de `tailwind.config.js`. Config via CSS `@theme`. Oxide engine (5x plus rapide)                   |
+| **NativeWind**      | 4.2.x       | **ATTENTION:** v4.x requiert Tailwind CSS **v3.4.x** (PAS v4). Config Tailwind separee pour mobile                   |
+| **TypeScript**      | 5.9.x       | Stable. TS 7 (Go) en preview, pas encore pret                                                                        |
+| **Docker Compose**  | v5.x        | Identique a v2 en CLI, SDK Go ajoute                                                                                 |
+| **GraphQL Codegen** | CLI 6.x     | `@graphql-codegen/client-preset` pour typed document nodes                                                           |
 
 ### Alertes Compatibilite Critiques
 
@@ -152,6 +154,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 ### Conventions de Nommage (OBLIGATOIRES)
 
 **Fichiers TypeScript :** `kebab-case.role.ts(x)` (dot-notation)
+
 - Exemples : `ritual.service.ts`, `ritual.card.tsx`, `household.schema.ts`
 - Suffixes de role : `.module`, `.resolver`, `.service`, `.repository`, `.model`, `.dto`, `.guard`, `.decorator`, `.filter`, `.event`, `.command`, `.handler`, `.query`, `.card`, `.form`, `.hooks`, `.schema`, `.store`, `.spec`
 
@@ -165,12 +168,14 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 **Zod schemas :** `domain.schema.ts`
 
 **Prisma → PostgreSQL :**
+
 - Models : `PascalCase` singulier — `HouseholdMember`
 - Tables : `snake_case` pluriel via `@@map()` — `household_members`
 - Colonnes : `snake_case` via `@map()` — `created_at`
 - IDs : UUID v7 pour tous les identifiants
 
 **GraphQL (conventions identiques en code-first) :**
+
 - Types : `PascalCase` singulier — `Ritual`
 - Queries : `camelCase` — `ritual`, `rituals`
 - Mutations : `camelCase` verbe+nom — `createRitual`
@@ -181,28 +186,33 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 ### Patterns Architecturaux a Respecter
 
 **Architecture Modulaire NestJS :**
+
 - 8 modules : `household`, `member`, `ritual`, `ai`, `auth`, `notification`, `compliance`, `admin`
 - Chaque module avec : `module.ts`, `resolver.ts`, `service.ts`, `repository.ts`, `__tests__/`
 - Communication inter-modules uniquement via injection du service OU events CQRS
 - JAMAIS d'import direct du repository d'un autre module
 
 **GraphQL Code-First :**
+
 - Decorateurs TypeScript (`@ObjectType`, `@Field`, `@Query`) = source de verite
 - NestJS auto-genere `schema.gql` au demarrage
 - `graphql-codegen` genere les hooks Apollo Client (frontend uniquement)
 
 **CQRS Progressif :**
+
 - MVP : `@nestjs/cqrs` EventBus in-process
 - Rituels et Activity implementent CQRS en premier
 - Autres modules utilisent des services classiques
 - Chaque event CQRS inclut : `householdId` + `triggeredBy` + `occurredAt`
 
 **Error Handling :**
+
 - Custom exceptions NestJS (JAMAIS `throw new Error()` brut)
 - `ExceptionFilter` global → format `{ message, extensions: { code, statusCode } }`
 - Codes d'erreur : `UPPER_SNAKE_CASE` avec prefixe domaine — `RITUAL_NOT_FOUND`
 
 **Tests :**
+
 - Co-localises dans `__tests__/` avec suffixe `.spec.ts(x)`
 - Backend unit : `modules/domain/__tests__/domain.service.spec.ts`
 - Frontend unit : `features/domain/__tests__/domain.card.spec.tsx`
@@ -211,6 +221,7 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 - API integration : `apps/api/test/`
 
 **Logging :**
+
 - Format JSON structure via `pino`
 - Niveaux : `error` (crash), `warn` (anormal gere), `info` (evenement metier), `debug` (detail technique)
 
@@ -224,30 +235,34 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 ### NFRs Impactant cette Story
 
-| NFR | Critere | Impact Story 1.1 |
-|---|---|---|
-| NFR7 | TLS 1.3 toutes connexions | Cloudflare + HTTPS partout |
-| NFR14 | 5 a 5000 foyers sans changement d'archi | Architecture modulaire, scaling vertical → horizontal |
-| NFR27 | TypeScript strict E2E, zero `any` | `strict: true` dans tous les tsconfig, CI check |
-| NFR29 | CI/CD valide build+tests+lint avant deploy | GitHub Actions pipeline obligatoire |
-| NFR17 | Infra < 0.05 EUR/foyer/mois | Choix Supabase Pro + Railway Pro + Vercel Pro + Cloudflare Free |
-| NFR20 | Recovery auto < 5min | Health checks + auto-restart Railway |
+| NFR   | Critere                                    | Impact Story 1.1                                                |
+| ----- | ------------------------------------------ | --------------------------------------------------------------- |
+| NFR7  | TLS 1.3 toutes connexions                  | Cloudflare + HTTPS partout                                      |
+| NFR14 | 5 a 5000 foyers sans changement d'archi    | Architecture modulaire, scaling vertical → horizontal           |
+| NFR27 | TypeScript strict E2E, zero `any`          | `strict: true` dans tous les tsconfig, CI check                 |
+| NFR29 | CI/CD valide build+tests+lint avant deploy | GitHub Actions pipeline obligatoire                             |
+| NFR17 | Infra < 0.05 EUR/foyer/mois                | Choix Supabase Pro + Railway Pro + Vercel Pro + Cloudflare Free |
+| NFR20 | Recovery auto < 5min                       | Health checks + auto-restart Railway                            |
 
 ### Design Tokens a Initialiser (packages/tokens)
 
 **Couleurs Neutres :**
+
 - `--bg-primary`: `#FAFAFA` | `--bg-secondary`: `#F5F5F5` | `--bg-elevated`: `#FFFFFF`
 - `--text-primary`: `#1A1A1A` | `--text-secondary`: `#6B7280` | `--text-muted`: `#9CA3AF`
 - `--border-default`: `#E5E7EB` | `--border-subtle`: `#F3F4F6`
 
 **Couleurs Membres :**
+
 - Membre 1: `#3B82F6` (Bleu) | Membre 2: `#8B5CF6` (Violet) | Membre 3: `#F59E0B` (Ambre)
 - Membre 4: `#10B981` (Emeraude) | Membre 5: `#EF4444` (Rouge) | Membre 6+: `#6366F1` (Indigo)
 
 **Couleurs Semantiques :**
+
 - `--success`: `#10B981` | `--warning`: `#F59E0B` | `--error`: `#EF4444` | `--info`: `#3B82F6`
 
 **Theme Temporel :**
+
 - Matin (6h-12h) : fond `#FFFBF5`, tons dores
 - Midi (12h-17h) : fond `#FAFAFA`, palette par defaut
 - Soir (17h-21h) : fond `#FFF8F0`, tons chauds attenues
@@ -255,20 +270,22 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 **Typographie : Inter (variable font)**
 
-| Token | Taille | Poids | Usage |
-|---|---|---|---|
-| `--text-xs` | 12px | 400 | Badges, metadata |
-| `--text-sm` | 14px | 400 | Labels, texte secondaire |
-| `--text-base` | 16px | 400 | Corps de texte |
-| `--text-lg` | 18px | 500 | Sous-titres |
-| `--text-xl` | 20px | 600 | Titres de sections |
-| `--text-2xl` | 24px | 600 | Titres principaux |
+| Token         | Taille | Poids | Usage                    |
+| ------------- | ------ | ----- | ------------------------ |
+| `--text-xs`   | 12px   | 400   | Badges, metadata         |
+| `--text-sm`   | 14px   | 400   | Labels, texte secondaire |
+| `--text-base` | 16px   | 400   | Corps de texte           |
+| `--text-lg`   | 18px   | 500   | Sous-titres              |
+| `--text-xl`   | 20px   | 600   | Titres de sections       |
+| `--text-2xl`  | 24px   | 600   | Titres principaux        |
 
 **Spacing (base 4px) :**
+
 - `--space-1`: 4px | `--space-2`: 8px | `--space-3`: 12px | `--space-4`: 16px
 - `--space-5`: 20px | `--space-6`: 24px | `--space-8`: 32px | `--space-10`: 40px
 
 **Arrondis :**
+
 - `--radius-sm`: 4px | `--radius-md`: 8px | `--radius-lg`: 12px | `--radius-xl`: 16px | `--radius-full`: 9999px
 
 ### Accessibilite (des le depart)
@@ -401,6 +418,7 @@ family-hub/                          # Racine monorepo
 ```
 
 **Dependances entre modules NestJS (respecter strictement) :**
+
 - `household` → aucune dependance
 - `member` → household
 - `ritual` → member, household
@@ -411,10 +429,12 @@ family-hub/                          # Racine monorepo
 - `auth` → member, household
 
 **Regle stricte :** Un module ne peut JAMAIS importer le repository d'un autre module. Communication inter-modules via :
+
 1. Injection du **service** de l'autre module (queries synchrones)
 2. **Events CQRS** (side effects asynchrones)
 
 **Flux de donnees :**
+
 ```
 User Action → Apollo Client (optimistic UI) → GraphQL → NestJS Resolver
   → Guard (RBAC + household isolation) → Service → Command (CQRS)

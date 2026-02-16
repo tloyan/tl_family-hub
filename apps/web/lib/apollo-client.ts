@@ -1,7 +1,7 @@
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client/core";
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 
 const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql",
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql',
 });
 
 export const apolloClient = new ApolloClient({
@@ -9,7 +9,7 @@ export const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
-      fetchPolicy: "cache-and-network",
+      fetchPolicy: 'cache-and-network',
     },
   },
 });

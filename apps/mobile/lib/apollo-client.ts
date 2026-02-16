@@ -1,9 +1,8 @@
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client/core";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { persistCache } from "apollo3-cache-persist";
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { persistCache } from 'apollo3-cache-persist';
 
-const API_URL =
-  process.env.EXPO_PUBLIC_GRAPHQL_URL ?? "http://localhost:4000/graphql";
+const API_URL = process.env.EXPO_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql';
 
 export async function initApolloClient() {
   const cache = new InMemoryCache();
@@ -24,7 +23,7 @@ export async function initApolloClient() {
     cache,
     defaultOptions: {
       watchQuery: {
-        fetchPolicy: "cache-and-network",
+        fetchPolicy: 'cache-and-network',
       },
     },
   });

@@ -16,9 +16,15 @@
     "db:migrate:dev": "turbo run db:migrate:dev --filter=@family-hub/db",
     "db:push": "turbo run db:push --filter=@family-hub/db",
     "db:seed": "turbo run db:seed --filter=@family-hub/db",
-    "db:studio": "turbo run db:studio --filter=@family-hub/db"
+    "db:studio": "turbo run db:studio --filter=@family-hub/db",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.5.3",
     "turbo": "^2.8.7"
   },
