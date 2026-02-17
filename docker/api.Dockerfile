@@ -31,7 +31,7 @@ FROM base AS prod-deps
 WORKDIR /app
 
 COPY --from=pruner /app/out/json/ .
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # ── Stage 5: Runner ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
