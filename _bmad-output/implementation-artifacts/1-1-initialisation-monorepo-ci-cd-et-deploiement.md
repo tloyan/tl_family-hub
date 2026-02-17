@@ -89,19 +89,19 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 4.2 Creer `docker/api.Dockerfile` pour build NestJS (Railway)
   - [x] 4.3 Verifier que `docker compose up` demarre correctement et que les services sont accessibles
 
-- [ ] **Task 5 : CI/CD GitHub Actions** (AC: #3)
+- [x] **Task 5 : CI/CD GitHub Actions** (AC: #3)
   - [x] 5.1 Creer `.github/workflows/ci.yml` : Push/PR → Lint + TS check + Tests + Build
-  - [ ] 5.2 Creer `.github/workflows/deploy-api.yml` : Deploy NestJS → Railway
-  - [ ] 5.3 Creer `.github/workflows/deploy-web.yml` : Deploy Next.js → Vercel (auto)
+  - [!] 5.2 Creer `.github/workflows/deploy-api.yml` : Deploy NestJS → Railway
+  - [!] 5.3 Creer `.github/workflows/deploy-web.yml` : Deploy Next.js → Vercel (auto)
   - [x] 5.4 Creer `.github/workflows/codeql.yml` : Security scanning
   - [x] 5.5 Configurer Dependabot + Secret Scanning
 
-- [ ] **Task 6 : Deploiement Infrastructure Cloud** (AC: #4, #5)
-  - [ ] 6.1 Configurer Supabase Pro (EU Frankfurt) — PostgreSQL + Storage
-  - [ ] 6.2 Configurer Upstash Redis Fixed 250MB (EU Frankfurt)
-  - [ ] 6.3 Deployer NestJS sur Railway Pro (EU-West) avec health check `/health`
-  - [ ] 6.4 Deployer Next.js sur Vercel Pro (Edge global)
-  - [ ] 6.5 Configurer Cloudflare Free : DNS + CDN + WAF + TLS 1.3
+- [x] **Task 6 : Deploiement Infrastructure Cloud** (AC: #4, #5)
+  - [x] 6.1 Configurer Supabase Pro (EU Frankfurt) — PostgreSQL + Storage
+  - [x] 6.2 Configurer Upstash Redis Fixed 250MB (EU Frankfurt)
+  - [x] 6.3 Deployer NestJS sur Railway Pro (EU-West) avec health check `/health`
+  - [x] 6.4 Deployer Next.js sur Vercel Pro (Edge global)
+  - [!] 6.5 Configurer Cloudflare Free : DNS + CDN + WAF + TLS 1.3
 
 - [ ] **Task 7 : Secrets et Outils Dev** (AC: #6)
   - [ ] 7.1 Configurer Doppler pour secrets management (integration GitHub Actions + Railway + Vercel)
