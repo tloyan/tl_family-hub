@@ -1,17 +1,17 @@
-import tseslint from "typescript-eslint";
-import checkFile from "eslint-plugin-check-file";
+import tseslint from 'typescript-eslint';
+import checkFile from 'eslint-plugin-check-file';
 
 export default tseslint.config(
   {
     ignores: [
-      "dist/**",
-      "node_modules/**",
-      ".next/**",
-      ".expo/**",
-      "coverage/**",
-      "build/**",
-      "eslint.config.*",
-      "*.config.{js,mjs}",
+      'dist/**',
+      'node_modules/**',
+      '.next/**',
+      '.expo/**',
+      'coverage/**',
+      'build/**',
+      'eslint.config.*',
+      '*.config.{js,mjs}',
     ],
   },
   ...tseslint.configs.strictTypeChecked,
@@ -22,20 +22,20 @@ export default tseslint.config(
       },
     },
     rules: {
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/restrict-template-expressions": [
-        "error",
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
         { allowNumber: true, allowBoolean: true },
       ],
-      "no-console": "warn",
+      'no-console': 'warn',
     },
   },
   {
-    plugins: { "check-file": checkFile },
+    plugins: { 'check-file': checkFile },
     rules: {
-      "check-file/filename-naming-convention": [
-        "error",
-        { "**/*.{js,ts,jsx,tsx}": "KEBAB_CASE" },
+      'check-file/filename-naming-convention': [
+        'error',
+        { '**/*.{js,ts,jsx,tsx}': 'KEBAB_CASE' },
         { ignoreMiddleExtensions: true },
       ],
     },

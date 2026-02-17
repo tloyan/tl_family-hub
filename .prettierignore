@@ -7,3 +7,7 @@ coverage
 .turbo
 .expo
 pnpm-lock.yaml
+_bmad
+_bmad-output
+.claude
+src/generated

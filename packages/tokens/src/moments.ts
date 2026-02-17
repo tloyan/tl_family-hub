@@ -1,41 +1,41 @@
-export type Moment = "morning" | "midday" | "evening" | "night";
+export type Moment = 'morning' | 'midday' | 'evening' | 'night';
 
 export interface MomentTheme {
   readonly moment: Moment;
   readonly label: string;
   readonly hourRange: readonly [start: number, end: number];
   readonly background: string;
-  readonly temperature: "warm" | "neutral" | "soft-warm" | "soft-cool";
+  readonly temperature: 'warm' | 'neutral' | 'soft-warm' | 'soft-cool';
 }
 
 export const MOMENT_THEMES: Record<Moment, MomentTheme> = {
   morning: {
-    moment: "morning",
-    label: "Morning",
+    moment: 'morning',
+    label: 'Morning',
     hourRange: [6, 12],
-    background: "#FFFBF5",
-    temperature: "warm",
+    background: '#FFFBF5',
+    temperature: 'warm',
   },
   midday: {
-    moment: "midday",
-    label: "Midday",
+    moment: 'midday',
+    label: 'Midday',
     hourRange: [12, 17],
-    background: "#FAFAFA",
-    temperature: "neutral",
+    background: '#FAFAFA',
+    temperature: 'neutral',
   },
   evening: {
-    moment: "evening",
-    label: "Evening",
+    moment: 'evening',
+    label: 'Evening',
     hourRange: [17, 21],
-    background: "#FFF8F0",
-    temperature: "soft-warm",
+    background: '#FFF8F0',
+    temperature: 'soft-warm',
   },
   night: {
-    moment: "night",
-    label: "Night",
+    moment: 'night',
+    label: 'Night',
     hourRange: [21, 6],
-    background: "#0F172A",
-    temperature: "soft-cool",
+    background: '#0F172A',
+    temperature: 'soft-cool',
   },
 } as const;
 

@@ -1,9 +1,9 @@
 /// <reference types="nativewind/types" />
 
-import * as React from "react";
-import { Text as RNText } from "react-native";
+import * as React from 'react';
+import { Text as RNText } from 'react-native';
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
@@ -12,12 +12,7 @@ function Text({
   ...props
 }: React.ComponentProps<typeof RNText> & React.RefAttributes<RNText>) {
   const textClass = React.useContext(TextClassContext);
-  return (
-    <RNText
-      className={cn("text-base text-foreground", textClass, className)}
-      {...props}
-    />
-  );
+  return <RNText className={cn('text-base text-foreground', textClass, className)} {...props} />;
 }
 
 export { Text, TextClassContext };
