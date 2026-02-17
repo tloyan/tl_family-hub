@@ -33,6 +33,9 @@
     "@family-hub/db#typecheck": {
       "dependsOn": ["build"]
     },
+    "@family-hub/tokens#typecheck": {
+      "dependsOn": ["build"]
+    },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
