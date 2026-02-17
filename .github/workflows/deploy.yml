@@ -1,16 +1,13 @@
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
     branches: [main, dev]
 
 jobs:
   setup:
     name: Setup deployment
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 5
     outputs:
       environment: ${{ steps.env.outputs.environment }}
@@ -18,7 +15,7 @@ jobs:
       - name: Determine environment
         id: env
         run: |
-          if [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "environment=production" >> "$GITHUB_OUTPUT"
           else
             echo "environment=dev" >> "$GITHUB_OUTPUT"
@@ -26,9 +23,9 @@ jobs:
 
       - name: Log deployment info
         run: |
-          echo "Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Branch: ${{ github.ref_name }}"
           echo "Environment: ${{ steps.env.outputs.environment }}"
-          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "SHA: ${{ github.sha }}"
 
   deploy-api:
     name: Deploy API (Railway)
@@ -43,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
@@ -83,7 +80,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -147,7 +144,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -174,6 +171,6 @@ jobs:
 
       - name: Publish update
         working-directory: apps/mobile
-        run: eas update --channel ${{ needs.setup.outputs.environment }} --message "Deploy ${{ github.event.workflow_run.head_sha }}"
+        run: eas update --channel ${{ needs.setup.outputs.environment }} --message "Deploy ${{ github.sha }}"
         env:
           CI: 1
