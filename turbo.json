@@ -22,10 +22,16 @@
       "persistent": true
     },
     "lint": {
-      "dependsOn": ["^build", "^lint"]
+      "dependsOn": ["^lint"]
+    },
+    "@family-hub/db#lint": {
+      "dependsOn": ["build"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "^typecheck"]
+      "dependsOn": ["^typecheck"]
+    },
+    "@family-hub/db#typecheck": {
+      "dependsOn": ["build"]
     },
     "test": {
       "dependsOn": ["^build"],
