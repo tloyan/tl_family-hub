@@ -221,6 +221,9 @@ importers:
       '@family-hub/config-ts':
         specifier: workspace:*
         version: link:../../packages/config-ts
+      '@types/node':
+        specifier: ^22.19.11
+        version: 22.19.11
       '@types/react':
         specifier: ~19.1.0
         version: 19.1.17
