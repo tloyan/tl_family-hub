@@ -23,6 +23,7 @@ export default {
         'config-eslint',
         'config-ts',
         'config-tailwind',
+        'ci',
       ],
     ],
     'scope-empty': [0],
