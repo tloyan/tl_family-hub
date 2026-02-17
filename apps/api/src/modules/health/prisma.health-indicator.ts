@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HealthIndicatorService, HealthIndicatorResult } from '@nestjs/terminus';
+import { Prisma } from '@family-hub/db';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -13,7 +14,7 @@ export class PrismaHealthIndicator {
     const indicator = this.indicatorService.check(key);
 
     try {
-      await this.prisma.$queryRawUnsafe('SELECT 1');
+      await this.prisma.$queryRaw(Prisma.sql`SELECT 1`);
       return indicator.up();
     } catch (error) {
       return indicator.down({ message: (error as Error).message });
