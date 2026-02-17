@@ -25,19 +25,25 @@ COPY --from=pruner /app/out/full/ .
 # Dummy DATABASE_URL for prisma generate (no actual connection made)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     pnpm turbo run build --filter=@family-hub/api
-RUN CI=true pnpm prune --prod --no-optional --ignore-scripts
 
-# ── Stage 4: Runner ──────────────────────────────────────────────────────────
+# ── Stage 4: Production deps ────────────────────────────────────────────────
+FROM base AS prod-deps
+WORKDIR /app
+
+COPY --from=pruner /app/out/json/ .
+RUN pnpm install --frozen-lockfile --prod
+
+# ── Stage 5: Runner ──────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nestjs && \
     adduser --system --uid 1001 nestjs
 
-# Copy production node_modules
-COPY --from=builder --chown=nestjs:nestjs /app/node_modules ./node_modules
-COPY --from=builder --chown=nestjs:nestjs /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=builder --chown=nestjs:nestjs /app/packages/db/node_modules ./packages/db/node_modules
+# Copy production node_modules (clean install, no broken symlinks)
+COPY --from=prod-deps --chown=nestjs:nestjs /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=nestjs:nestjs /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=prod-deps --chown=nestjs:nestjs /app/packages/db/node_modules ./packages/db/node_modules
 
 # Copy built API
 COPY --from=builder --chown=nestjs:nestjs /app/apps/api/dist ./apps/api/dist
