@@ -1,0 +1,9 @@
+{
+  "extends": "@family-hub/config-ts/library.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "dist/ts/tokens.ts"],
+  "exclude": ["node_modules"]
+}

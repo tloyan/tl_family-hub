@@ -1,0 +1,10 @@
+{
+  "bg-primary": { "$type": "color", "$value": "#FAFAFA" },
+  "bg-secondary": { "$type": "color", "$value": "#F5F5F5" },
+  "bg-elevated": { "$type": "color", "$value": "#FFFFFF" },
+  "text-primary": { "$type": "color", "$value": "#1A1A1A" },
+  "text-secondary": { "$type": "color", "$value": "#6B7280" },
+  "text-muted": { "$type": "color", "$value": "#9CA3AF" },
+  "border-default": { "$type": "color", "$value": "#E5E7EB" },
+  "border-subtle": { "$type": "color", "$value": "#F3F4F6" }
+}

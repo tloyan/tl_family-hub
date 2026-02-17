@@ -1,0 +1,73 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    target-branch: dev
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      turborepo:
+        patterns:
+          - 'turbo'
+          - '@turbo/*'
+        update-types:
+          - minor
+          - patch
+      nestjs:
+        patterns:
+          - '@nestjs/*'
+        update-types:
+          - minor
+          - patch
+      nextjs:
+        patterns:
+          - 'next'
+          - '@next/*'
+        update-types:
+          - minor
+          - patch
+      expo:
+        patterns:
+          - 'expo'
+          - 'expo-*'
+          - '@expo/*'
+          - 'react-native'
+        update-types:
+          - minor
+          - patch
+      prisma:
+        patterns:
+          - 'prisma'
+          - '@prisma/*'
+        update-types:
+          - minor
+          - patch
+      linting:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - 'prettier'
+          - '@typescript-eslint/*'
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    target-branch: dev
+    commit-message:
+      prefix: 'ci'

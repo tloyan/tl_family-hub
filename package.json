@@ -1,13 +1,55 @@
 {
   "name": "family-hub",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Family Hub - FamTech SaaS for family organization",
+  "license": "UNLICENSED",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
+    "db:generate": "turbo run db:generate --filter=@family-hub/db",
+    "db:migrate:dev": "turbo run db:migrate:dev --filter=@family-hub/db",
+    "db:push": "turbo run db:push --filter=@family-hub/db",
+    "db:seed": "turbo run db:seed --filter=@family-hub/db",
+    "db:studio": "turbo run db:studio --filter=@family-hub/db",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "docker:reset": "docker compose -f docker/docker-compose.yml down -v",
+    "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.27.0"
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.5.3",
+    "turbo": "^2.8.7"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "pnpm": {
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "apollo3-cache-persist>@apollo/client": "4"
+      }
+    },
+    "onlyBuiltDependencies": [
+      "@apollo/protobufjs",
+      "@nestjs/core",
+      "@prisma/engines",
+      "esbuild",
+      "expo-modules-core",
+      "prisma",
+      "sharp"
+    ]
+  }
 }

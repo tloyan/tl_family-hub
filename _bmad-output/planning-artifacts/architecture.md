@@ -180,7 +180,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 **Decisions critiques (bloquent l'implementation) :**
 
 - Architecture globale : monolithe modulaire event-driven + CQRS progressif
-- API style : GraphQL schema-first
+- API style : GraphQL code-first
 - Modele de permissions : RBAC + ABAC + ReBAC (PBAC hybride)
 - Isolation des donnees par foyer : Prisma Client Extension automatique
 - Authentification : Better Auth (Social OAuth + Magic Link/OTP)
@@ -227,8 +227,8 @@ npx create-turbo@latest family-home --package-manager pnpm
 
 | Decision | Choix | Rationale |
 |---|---|---|
-| API style | GraphQL **schema-first** (`@nestjs/graphql` + `typePaths`) | Schema SDL comme contrat API, design API-first, coherent avec Apollo ecosystem |
-| Codegen | `graphql-codegen` | Generation types TS backend (depuis SDL) + hooks types Apollo Client (web/mobile) |
+| API style | GraphQL **code-first** (`@nestjs/graphql` + `autoSchemaFile`) | Schema auto-genere depuis les decorateurs TypeScript, zero duplication SDL/resolvers, coherent avec Apollo ecosystem |
+| Codegen | `graphql-codegen` | Generation hooks types Apollo Client (web/mobile) depuis le schema auto-genere |
 | Real-time | GraphQL Subscriptions + `graphql-redis-subscriptions` | Unifie queries/mutations/subscriptions en un seul protocole |
 | WebSocket transport | Socket.IO via `@nestjs/platform-socket.io` | Rooms par foyer, reconnexion auto mobile |
 | Client GraphQL | Apollo Client (web + mobile) | Cache normalise, optimistic UI, subscriptions, offline |
@@ -237,13 +237,12 @@ npx create-turbo@latest family-home --package-manager pnpm
 | Cache serveur | Redis via Upstash (triple usage : cache + pub/sub + sessions) | Un seul service, cout maitrise |
 | Kafka | Differe post-MVP | Redis Pub/Sub suffisant au lancement, migration ~1 jour documentes, Upstash Kafka serverless identifie (~1-2$/mois) |
 
-**Workflow schema-first :**
+**Workflow code-first :**
 
 ```
-1. Schema SDL (.graphql) = contrat API
-2. graphql-codegen → types TS backend + hooks types Apollo Client
-3. Implementation resolvers NestJS avec types generes
-4. Apollo Client consomme avec hooks types
+1. Decorateurs TypeScript (@ObjectType, @Field, @Query) = source de verite
+2. NestJS auto-genere schema.gql au demarrage
+3. graphql-codegen → hooks types Apollo Client (frontend uniquement)
 ```
 
 **Optimistic UI :** Pleinement compatible. Apollo Client supporte nativement `optimisticResponse` sur chaque mutation. Flux : mutation optimiste → UI instantanee → serveur valide → reconciliation → subscription broadcast aux autres clients.
@@ -268,7 +267,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 | Modele de permissions | RBAC + ABAC + ReBAC = **PBAC hybride** | Roles (4 roles) + attributs contextuels (age, temps, etat) + relations (cercles de visibilite) |
 | Granularite permissions | **Instance-level** (par membre, pas par role) | Chaque enfant a sa propre fiche de permissions modifiable individuellement par un parent |
 | Permissions enfants | Niveaux predefinis (Observer/Participant/Autonome) + overrides individuels par membre | Le niveau sert de preset, les overrides permettent du cas par cas. Table `MemberPermission(memberId, level, overrides, grantedBy)` |
-| Autorisation NestJS | Directives GraphQL SDL (roles) + Guards NestJS (logique complexe) | Schema-first coherent : les regles de base sont dans le contrat API, la logique metier dans les Guards |
+| Autorisation NestJS | Guards NestJS + decorateurs custom (roles, permissions) | Code-first coherent : autorisations definies dans le code TypeScript via @UseGuards et decorateurs custom |
 | Isolation foyer | Prisma Client Extension + `householdId` auto-injecte dans chaque requete | Zero risque d'oubli, bypass explicite `bypassHouseholdFilter()` pour les rares cas cross-foyer |
 | Prestataires | Compte Better Auth avec permissions limitees + date d'expiration, meme flux auth | Tracabilite, pas de token custom |
 | Chiffrement transit | TLS 1.3 (reverse proxy Cloudflare/Railway) | NFR7 |
@@ -390,7 +389,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 1. Monorepo Turborepo + pnpm (fondation)
 2. Docker Compose dev local (PostgreSQL + Redis)
 3. Schema Prisma initial + migrations
-4. NestJS API + GraphQL schema-first + Better Auth
+4. NestJS API + GraphQL code-first + Better Auth
 5. Supabase + Railway + Vercel (infra de base)
 6. Apollo Client + Next.js web (frontend web)
 7. Expo + Apollo Client (frontend mobile)
@@ -400,7 +399,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 
 **Dependances inter-decisions :**
 
-- GraphQL schema-first → necessite `graphql-codegen` dans le pipeline CI
+- GraphQL code-first → schema auto-genere au demarrage, `graphql-codegen` pour les hooks Apollo Client frontend uniquement
 - CQRS progressif → les modules Rituels et Activity implementent Commands/Queries/Events, les autres utilisent des services classiques
 - Prisma Client Extension (householdId) → doit etre configure avant tout module metier
 - Redis triple usage → un seul service Upstash sert le cache, pub/sub, sessions, et BullMQ
@@ -447,7 +446,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 | Zustand stores | `domain.store.ts` → `useDomainStore` | `theme.store.ts` → `useThemeStore` |
 | Schemas Zod | `domain.schema.ts` | `ritual.schema.ts`, `household.schema.ts` |
 
-**Convention dot-notation unifiee pour tout le monorepo** — meme convention backend (NestJS standard) et frontend, coherence maximale. Le suffixe explicite le role du fichier : `.service`, `.resolver`, `.card`, `.form`, `.hooks`, `.schema`, `.store`, `.spec`.
+**Convention dot-notation unifiee pour tout le monorepo** — meme convention backend (NestJS standard) et frontend, coherence maximale. Le suffixe explicite le role du fichier : `.module`, `.resolver`, `.service`, `.repository`, `.model`, `.dto`, `.guard`, `.decorator`, `.filter`, `.event`, `.command`, `.handler`, `.query`, `.card`, `.form`, `.hooks`, `.schema`, `.store`, `.spec`.
 
 ### Structure Patterns
 
@@ -458,6 +457,8 @@ apps/api/src/
 ├── modules/
 │   ├── ritual/
 │   │   ├── ritual.module.ts
+│   │   ├── ritual.model.ts          # @ObjectType() — types GraphQL retournés
+│   │   ├── ritual.dto.ts            # @InputType() — inputs GraphQL reçus
 │   │   ├── ritual.resolver.ts
 │   │   ├── ritual.service.ts
 │   │   ├── ritual.repository.ts
@@ -691,14 +692,7 @@ family-home/
 │   │   ├── src/
 │   │   │   ├── main.ts
 │   │   │   ├── app.module.ts
-│   │   │   ├── schema/               # GraphQL SDL (schema-first)
-│   │   │   │   ├── schema.graphql    # Schema racine (stitching)
-│   │   │   │   ├── household.graphql
-│   │   │   │   ├── member.graphql
-│   │   │   │   ├── ritual.graphql
-│   │   │   │   ├── notification.graphql
-│   │   │   │   ├── ai.graphql
-│   │   │   │   └── admin.graphql
+│   │   │   ├── schema.gql            # Auto-generated by NestJS code-first (do not edit)
 │   │   │   ├── modules/
 │   │   │   │   ├── household/
 │   │   │   │   │   ├── household.module.ts
@@ -718,6 +712,8 @@ family-home/
 │   │   │   │   │   └── __tests__/
 │   │   │   │   ├── ritual/            # CQRS actif
 │   │   │   │   │   ├── ritual.module.ts
+│   │   │   │   │   ├── ritual.model.ts          # @ObjectType() — types GraphQL retournés
+│   │   │   │   │   ├── ritual.dto.ts            # @InputType() — inputs GraphQL reçus
 │   │   │   │   │   ├── ritual.resolver.ts
 │   │   │   │   │   ├── ritual.service.ts
 │   │   │   │   │   ├── ritual.repository.ts
@@ -788,7 +784,7 @@ family-home/
 │   │   │   └── helpers/
 │   │   ├── nest-cli.json
 │   │   ├── tsconfig.json
-│   │   ├── codegen.ts                # graphql-codegen config backend
+│   │   ├── codegen.ts                # graphql-codegen config (points to auto-generated schema.gql)
 │   │   └── package.json
 │   │
 │   ├── web/                          # ── Next.js Frontend ──
@@ -1101,7 +1097,7 @@ Editeur modifie contenu dans Strapi Cloud
 
 ### Coherence Validation
 
-**Compatibilite des decisions :** Toutes les technologies fonctionnent ensemble sans conflit. GraphQL schema-first + Apollo Client + NestJS + Prisma + Redis forment une stack coherente de bout en bout. L'event-driven + CQRS progressif s'integre naturellement via `@nestjs/cqrs`. Strapi s'integre comme source de contenu decouple consomme par Next.js ISR.
+**Compatibilite des decisions :** Toutes les technologies fonctionnent ensemble sans conflit. GraphQL code-first + Apollo Client + NestJS + Prisma + Redis forment une stack coherente de bout en bout. L'event-driven + CQRS progressif s'integre naturellement via `@nestjs/cqrs`. Strapi s'integre comme source de contenu decouple consomme par Next.js ISR.
 
 **Consistance des patterns :** La dot-notation, les conventions CQRS (events avec householdId + triggeredBy + occurredAt), les patterns GraphQL, et la structure des tests sont coherents avec la stack. Aucune contradiction detectee.
 
@@ -1150,7 +1146,7 @@ Editeur modifie contenu dans Strapi Cloud
 **Decisions architecturales**
 
 - [x] Architecture globale (event-driven + CQRS progressif)
-- [x] API & Communication (GraphQL schema-first + subscriptions)
+- [x] API & Communication (GraphQL code-first + subscriptions)
 - [x] Data (Prisma-first + DDD conventions + Zod partage)
 - [x] Auth & Security (PBAC hybride + Prisma Extension isolation)
 - [x] Frontend (Apollo + Zustand + offline mobile complet)

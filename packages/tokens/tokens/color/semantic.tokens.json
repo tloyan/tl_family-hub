@@ -1,0 +1,6 @@
+{
+  "success": { "$type": "color", "$value": "#10B981" },
+  "warning": { "$type": "color", "$value": "#F59E0B" },
+  "error": { "$type": "color", "$value": "#EF4444" },
+  "info": { "$type": "color", "$value": "#3B82F6" }
+}

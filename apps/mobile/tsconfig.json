@@ -1,0 +1,10 @@
+{
+  "extends": ["expo/tsconfig.base", "@family-hub/config-ts/expo.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
+}

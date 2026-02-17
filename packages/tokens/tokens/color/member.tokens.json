@@ -1,0 +1,8 @@
+{
+  "member-1": { "$type": "color", "$value": "#3B82F6" },
+  "member-2": { "$type": "color", "$value": "#8B5CF6" },
+  "member-3": { "$type": "color", "$value": "#F59E0B" },
+  "member-4": { "$type": "color", "$value": "#10B981" },
+  "member-5": { "$type": "color", "$value": "#EF4444" },
+  "member-6": { "$type": "color", "$value": "#6366F1" }
+}

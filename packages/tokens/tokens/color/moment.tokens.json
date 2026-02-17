@@ -1,0 +1,6 @@
+{
+  "moment-morning": { "$type": "color", "$value": "#FFFBF5" },
+  "moment-midday": { "$type": "color", "$value": "#FAFAFA" },
+  "moment-evening": { "$type": "color", "$value": "#FFF8F0" },
+  "moment-night": { "$type": "color", "$value": "#0F172A" }
+}
