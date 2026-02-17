@@ -1,0 +1,175 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main, dev]
+
+jobs:
+  setup:
+    name: Setup deployment
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 5
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      sha: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Log deployment info
+        run: |
+          echo "Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Environment: ${{ steps.env.outputs.environment }}"
+          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
+
+  deploy-api:
+    name: Deploy API (Railway)
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.setup.outputs.environment }}
+    concurrency:
+      group: deploy-api-${{ needs.setup.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.sha }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.API_URL }}/health" || true)
+            if [[ "$status" == "200" ]]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i/10 — status: $status, retrying in 15s..."
+            sleep 15
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+  deploy-web:
+    name: Deploy Web (Vercel)
+    needs: [setup, deploy-api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.setup.outputs.environment }}
+    concurrency:
+      group: deploy-web-${{ needs.setup.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=${{ needs.setup.outputs.environment == 'production' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build
+        run: vercel build ${{ needs.setup.outputs.environment == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt ${{ needs.setup.outputs.environment == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.deploy.outputs.url }}" || true)
+            if [[ "$status" == "200" ]]; then
+              echo "Health check passed: ${{ steps.deploy.outputs.url }}"
+              exit 0
+            fi
+            echo "Attempt $i/10 — status: $status, retrying in 15s..."
+            sleep 15
+          done
+          echo "Health check failed after 10 attempts"
+          exit 1
+
+  deploy-mobile:
+    name: Deploy Mobile (EAS Update)
+    needs: [setup, deploy-api]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ needs.setup.outputs.environment }}
+    concurrency:
+      group: deploy-mobile-${{ needs.setup.outputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.setup.outputs.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish update
+        working-directory: apps/mobile
+        run: eas update --channel ${{ needs.setup.outputs.environment }} --message "Deploy ${{ needs.setup.outputs.sha }}" --non-interactive
