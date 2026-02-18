@@ -54,7 +54,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - **Ritual cards expandables** : rituels imbriques (parent -> micro-rituels), validation cascade, progression incrementale
 - **Profils visuels adaptatifs** : 5 variantes de rendu (parent, enfant >=7 ans, enfant <7 ans, prestataire, kiosk) gerees par tokens et logique de props
 - **Theming temporel** : changement d'ambiance selon le moment de la journee (matin chaud, midi neutre, soir doux, nuit sombre) avec transition progressive
-- **Design system** : ShadCN UI (web) + equivalent React Native (NativeWind), tokens partages dans le monorepo
+- **Design system** : ShadCN UI directement dans apps/web + NativeWind directement dans apps/mobile, design tokens partages via `packages/tokens/`
 
 ### Scale & Complexity
 
@@ -123,14 +123,11 @@ Aucun starter existant ne correspond a la combinaison exacte des preferences tec
 |---|---|---|
 | `shared` | Types, constantes, validations, enums | Tous |
 | `db` | Schema Prisma, migrations, seed | api, scripts |
-| `auth` | Config Better Auth partagee | web, mobile, api |
-| `ui` | Composants ShadCN UI customises | web |
-| `ui-native` | Composants React Native Reusables (ShadCN pour RN) + NativeWind | mobile |
-| `tokens` | Design tokens (couleurs, typo, spacing) | ui, ui-native |
-| `api-client` | Client API type | web, mobile |
+| `tokens` | Design tokens (couleurs, typo, spacing) + generation configs Tailwind | web, mobile |
 | `config-eslint` | Config ESLint partagee | Tous |
 | `config-ts` | Config TypeScript partagee | Tous |
-| `config-tailwind` | Config Tailwind partagee | web, mobile |
+
+> **Note post-Story-1.1 :** Les packages `auth`, `ui`, `ui-native`, `api-client` et `config-tailwind` initialement prevus ont ete reportes. L'auth vit dans `apps/api/modules/auth/`, les composants UI sont directement dans chaque app (ShadCN UI dans web, NativeWind dans mobile), et `packages/tokens/` genere les configurations Tailwind. Ces packages seront crees si un besoin de partage reel emerge.
 
 ### Technology Decisions
 
@@ -673,12 +670,11 @@ Format structure JSON via `pino` (NestJS) → Grafana Loki.
 ### Complete Project Directory Structure
 
 ```
-family-home/
+family-hub/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                    # Lint + TS + Tests + Build
-│       ├── deploy-api.yml            # Deploy NestJS → Railway
-│       ├── deploy-web.yml            # Deploy Next.js → Vercel (auto)
+│       ├── deploy.yml                # Deploy API (Railway) → Web (Vercel) → Mobile (EAS) sequentiel
 │       └── codeql.yml                # Security scanning
 ├── .husky/
 │   ├── pre-commit                    # Lint-staged
@@ -942,32 +938,7 @@ family-home/
 │   │   ├── tsconfig.json
 │   │   └── package.json
 │   │
-│   ├── auth/                         # Config Better Auth partagee
-│   │   ├── src/
-│   │   │   ├── auth.config.ts
-│   │   │   └── auth.client.ts
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   │
-│   ├── ui/                           # ShadCN UI (web)
-│   │   ├── src/
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── toast.tsx
-│   │   │   └── ...
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   │
-│   ├── ui-native/                    # React Native Reusables (mobile)
-│   │   ├── src/
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   └── ...
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   │
-│   ├── tokens/                       # Design tokens partages
+│   ├── tokens/                       # Design tokens partages + generation configs Tailwind
 │   │   ├── src/
 │   │   │   ├── colors.ts
 │   │   │   ├── typography.ts
@@ -977,27 +948,13 @@ family-home/
 │   │   ├── tsconfig.json
 │   │   └── package.json
 │   │
-│   ├── api-client/                   # Apollo Client config partagee
-│   │   ├── src/
-│   │   │   ├── apollo.config.ts
-│   │   │   ├── links/
-│   │   │   │   ├── auth.link.ts
-│   │   │   │   ├── error.link.ts
-│   │   │   │   └── retry.link.ts
-│   │   │   └── cache/
-│   │   │       └── cache.config.ts
-│   │   ├── tsconfig.json
-│   │   └── package.json
-│   │
 │   ├── config-eslint/
 │   │   └── index.js
-│   ├── config-ts/
-│   │   ├── base.json
-│   │   ├── nextjs.json
-│   │   ├── react-native.json
-│   │   └── nestjs.json
-│   └── config-tailwind/
-│       └── tailwind.config.js
+│   └── config-ts/
+│       ├── base.json
+│       ├── nextjs.json
+│       ├── react-native.json
+│       └── nestjs.json
 │
 ├── turbo.json
 ├── pnpm-workspace.yaml
@@ -1058,7 +1015,7 @@ Aucun acces direct du frontend a la base de donnees. Tout passe par GraphQL.
 |---|---|---|
 | Supabase | PostgreSQL + Storage | `packages/db/` (Prisma) + Supabase SDK (storage) |
 | Upstash Redis | Cache + Pub/Sub + Sessions + BullMQ | `apps/api/` config modules |
-| Better Auth | Social OAuth + Magic Link | `packages/auth/` |
+| Better Auth | Social OAuth + Magic Link | `apps/api/modules/auth/` |
 | Resend | Email transactionnel | `apps/api/modules/notification/` via BullMQ |
 | Expo Notifications | Push iOS/Android | `apps/api/modules/notification/` |
 | LLM Provider | IA conversationnelle | `apps/api/modules/ai/` |
@@ -1164,7 +1121,7 @@ Editeur modifie contenu dans Strapi Cloud
 
 **Structure projet**
 
-- [x] Arborescence complete (4 apps + 10 packages)
+- [x] Arborescence complete (3 apps + 5 packages implementes, 4 apps + 10 packages prevus)
 - [x] Boundaries modules definies
 - [x] Points d'integration mappes (internes + externes + Strapi)
 - [x] Data flow documente (applicatif + marketing)

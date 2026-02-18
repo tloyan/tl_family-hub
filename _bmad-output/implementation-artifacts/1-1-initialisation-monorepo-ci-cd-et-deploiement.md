@@ -460,4 +460,9 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
+- **5 packages reportes** (auth, ui, ui-native, api-client, config-tailwind) : complexite prematuree pour un seul consumer par package. ShadCN UI et NativeWind sont utilises directement dans chaque app. L'auth vivra dans le module NestJS `apps/api/modules/auth/`. `packages/tokens/` genere les configs Tailwind. Ces packages seront crees si un besoin reel de partage emerge.
+- **Workflows deploy fusionnes** : `deploy-api.yml` + `deploy-web.yml` fusionnes en `deploy.yml` unique qui valide le deploiement API avant de deployer Web puis Mobile, avec health checks a chaque etape.
+- **Infrastructure en free tiers** : Supabase Free, Upstash Free, Railway Trial, Vercel Hobby au lieu des tiers Pro/Fixed prevus. Suffisant pour le dev et le MVP.
+- **Cloudflare reporte** : pending achat domaine dedie. TLS 1.3 fourni nativement par Railway et Vercel en attendant.
+
 ### File List

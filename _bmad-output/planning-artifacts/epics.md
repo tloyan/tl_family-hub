@@ -292,7 +292,9 @@ Afin de disposer d'une fondation production-ready pour construire les features.
 
 **Given** le projet n'existe pas encore
 **When** j'initialise le monorepo avec Turborepo + pnpm
-**Then** la structure contient apps/ (api NestJS, web Next.js, mobile Expo) et packages/ (shared, db, auth, ui, ui-native, tokens, api-client, config-eslint, config-ts, config-tailwind)
+**Then** la structure contient apps/ (api NestJS, web Next.js, mobile Expo) et packages/ (shared, db, tokens, config-eslint, config-ts)
+
+> **Note post-Story-1.1 :** Les packages `auth`, `ui`, `ui-native`, `api-client` et `config-tailwind` ont ete reportes. Voir `architecture.md` pour le rationnel.
 
 **Given** Docker est installe
 **When** je lance `docker compose up`
