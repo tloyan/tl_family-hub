@@ -81,6 +81,7 @@ jobs:
         run: pnpm build
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
