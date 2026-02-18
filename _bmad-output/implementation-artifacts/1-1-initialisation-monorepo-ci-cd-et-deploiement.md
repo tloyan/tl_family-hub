@@ -1,6 +1,6 @@
 # Story 1.1 : Initialisation Monorepo, CI/CD et Deploiement
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -460,4 +460,207 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
+- **5 packages reportes** (auth, ui, ui-native, api-client, config-tailwind) : complexite prematuree pour un seul consumer par package. ShadCN UI et NativeWind sont utilises directement dans chaque app. L'auth vivra dans le module NestJS `apps/api/modules/auth/`. `packages/tokens/` genere les configs Tailwind. Ces packages seront crees si un besoin reel de partage emerge.
+- **Workflows deploy fusionnes** : `deploy-api.yml` + `deploy-web.yml` fusionnes en `deploy.yml` unique qui valide le deploiement API avant de deployer Web puis Mobile, avec health checks a chaque etape.
+- **Infrastructure en free tiers** : Supabase Free, Upstash Free, Railway Trial, Vercel Hobby au lieu des tiers Pro/Fixed prevus. Suffisant pour le dev et le MVP.
+- **Cloudflare reporte** : pending achat domaine dedie. TLS 1.3 fourni nativement par Railway et Vercel en attendant.
+
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][HIGH] File List vide — documenter tous les fichiers crees/modifies dans la section File List ci-dessous [_bmad-output/implementation-artifacts/1-1-initialisation-monorepo-ci-cd-et-deploiement.md:468]
+- [x] [AI-Review][HIGH] Story Status incoherent — mettre a jour le status de `ready-for-dev` vers le status appropriate (done ou in-progress) [_bmad-output/implementation-artifacts/1-1-initialisation-monorepo-ci-cd-et-deploiement.md:3]
+- [x] [AI-Review][MEDIUM] SonarCloud TypeScript paths incomplets — ajouter les tsconfig des packages (db, shared, tokens) dans sonar.typescript.tsconfigPaths [sonar-project.properties:10]
+- [x] [AI-Review][MEDIUM] PrismaService ne valide pas DATABASE_URL — ajouter validation Zod ou throw explicite au lieu du fallback sur string vide [apps/api/src/modules/prisma/prisma.service.ts]
+
 ### File List
+
+**Root config (created/modified):**
+- `.dockerignore` (A)
+- `.env.example` (A)
+- `.gitignore` (M)
+- `.lintstagedrc.json` (A)
+- `.npmrc` (A)
+- `.prettierignore` (A)
+- `.prettierrc` (A)
+- `commitlint.config.mjs` (A)
+- `eslint.config.mjs` (A)
+- `package.json` (M)
+- `pnpm-lock.yaml` (A)
+- `pnpm-workspace.yaml` (A)
+- `railway.toml` (A)
+- `README.md` (A)
+- `sonar-project.properties` (A)
+- `turbo.json` (A)
+- `vercel.json` (A)
+
+**Claude Code rules:**
+- `.claude/rules/git-workflow.md` (A)
+
+**GitHub Actions & security:**
+- `.github/dependabot.yml` (A)
+- `.github/workflows/ci.yml` (A)
+- `.github/workflows/codeql.yml` (A)
+- `.github/workflows/deploy.yml` (A)
+
+**Husky hooks:**
+- `.husky/commit-msg` (A)
+- `.husky/pre-commit` (A)
+
+**Docker:**
+- `docker/api.Dockerfile` (A)
+- `docker/docker-compose.yml` (A)
+
+**apps/api/ (NestJS):**
+- `apps/api/codegen.ts` (A)
+- `apps/api/eslint.config.mjs` (A)
+- `apps/api/nest-cli.json` (A)
+- `apps/api/package.json` (A)
+- `apps/api/tsconfig.json` (A)
+- `apps/api/vitest.config.ts` (A)
+- `apps/api/src/app.module.ts` (A)
+- `apps/api/src/main.ts` (A)
+- `apps/api/src/common/decorators/.gitkeep` (A)
+- `apps/api/src/common/filters/.gitkeep` (A)
+- `apps/api/src/common/guards/.gitkeep` (A)
+- `apps/api/src/modules/admin/.gitkeep` (A)
+- `apps/api/src/modules/ai/.gitkeep` (A)
+- `apps/api/src/modules/auth/.gitkeep` (A)
+- `apps/api/src/modules/compliance/.gitkeep` (A)
+- `apps/api/src/modules/household/.gitkeep` (A)
+- `apps/api/src/modules/member/.gitkeep` (A)
+- `apps/api/src/modules/notification/.gitkeep` (A)
+- `apps/api/src/modules/ritual/.gitkeep` (A)
+- `apps/api/src/modules/health/health.controller.ts` (A)
+- `apps/api/src/modules/health/health.model.ts` (A)
+- `apps/api/src/modules/health/health.module.ts` (A)
+- `apps/api/src/modules/health/health.resolver.ts` (A)
+- `apps/api/src/modules/health/prisma.health-indicator.ts` (A)
+- `apps/api/src/modules/prisma/prisma.module.ts` (A)
+- `apps/api/src/modules/prisma/prisma.service.ts` (A)
+- `apps/api/test/app.e2e-spec.ts` (A)
+
+**apps/web/ (Next.js):**
+- `apps/web/components.json` (A)
+- `apps/web/eslint.config.mjs` (A)
+- `apps/web/next-env.d.ts` (A)
+- `apps/web/next.config.ts` (A)
+- `apps/web/package.json` (A)
+- `apps/web/postcss.config.mjs` (A)
+- `apps/web/tsconfig.json` (A)
+- `apps/web/app/(app)/.gitkeep` (A)
+- `apps/web/app/(auth)/.gitkeep` (A)
+- `apps/web/app/(public)/.gitkeep` (A)
+- `apps/web/app/globals.css` (A)
+- `apps/web/app/layout.tsx` (A)
+- `apps/web/app/page.tsx` (A)
+- `apps/web/components/providers/apollo-provider.tsx` (A)
+- `apps/web/components/ui/button.tsx` (A)
+- `apps/web/e2e/.gitkeep` (A)
+- `apps/web/features/.gitkeep` (A)
+- `apps/web/lib/apollo-client.ts` (A)
+- `apps/web/lib/utils.ts` (A)
+- `apps/web/public/.gitkeep` (A)
+
+**apps/mobile/ (Expo):**
+- `apps/mobile/.gitignore` (A)
+- `apps/mobile/app.json` (A)
+- `apps/mobile/babel.config.js` (A)
+- `apps/mobile/eas.json` (A)
+- `apps/mobile/eslint.config.mjs` (A)
+- `apps/mobile/global.css` (A)
+- `apps/mobile/metro.config.js` (A)
+- `apps/mobile/nativewind-env.d.ts` (A)
+- `apps/mobile/package.json` (A)
+- `apps/mobile/tailwind.config.js` (A)
+- `apps/mobile/tsconfig.json` (A)
+- `apps/mobile/app/_layout.tsx` (A)
+- `apps/mobile/app/(auth)/_layout.tsx` (A)
+- `apps/mobile/app/(auth)/sign-in.tsx` (A)
+- `apps/mobile/app/(modals)/_layout.tsx` (A)
+- `apps/mobile/app/(modals)/create-event.tsx` (A)
+- `apps/mobile/app/(tabs)/_layout.tsx` (A)
+- `apps/mobile/app/(tabs)/calendar.tsx` (A)
+- `apps/mobile/app/(tabs)/index.tsx` (A)
+- `apps/mobile/app/(tabs)/settings.tsx` (A)
+- `apps/mobile/app/+not-found.tsx` (A)
+- `apps/mobile/app/index.tsx` (A)
+- `apps/mobile/assets/images/.gitkeep` (A)
+- `apps/mobile/components/providers/apollo-provider.tsx` (A)
+- `apps/mobile/components/ui/button.tsx` (A)
+- `apps/mobile/components/ui/text.tsx` (A)
+- `apps/mobile/e2e/.gitkeep` (A)
+- `apps/mobile/features/.gitkeep` (A)
+- `apps/mobile/lib/apollo-client.ts` (A)
+- `apps/mobile/lib/theme.ts` (A)
+- `apps/mobile/lib/utils.ts` (A)
+
+**packages/config-eslint/:**
+- `packages/config-eslint/base.js` (A)
+- `packages/config-eslint/expo.js` (A)
+- `packages/config-eslint/library.js` (A)
+- `packages/config-eslint/nestjs.js` (A)
+- `packages/config-eslint/nextjs.js` (A)
+- `packages/config-eslint/package.json` (A)
+
+**packages/config-ts/:**
+- `packages/config-ts/base.json` (A)
+- `packages/config-ts/expo.json` (A)
+- `packages/config-ts/library.json` (A)
+- `packages/config-ts/nestjs.json` (A)
+- `packages/config-ts/nextjs.json` (A)
+- `packages/config-ts/package.json` (A)
+
+**packages/db/:**
+- `packages/db/.gitignore` (A)
+- `packages/db/eslint.config.mjs` (A)
+- `packages/db/package.json` (A)
+- `packages/db/prisma.config.ts` (A)
+- `packages/db/tsconfig.json` (A)
+- `packages/db/tsdown.config.ts` (A)
+- `packages/db/prisma/migrations/.gitkeep` (A)
+- `packages/db/prisma/schema/base.prisma` (A)
+- `packages/db/prisma/seed.ts` (A)
+- `packages/db/src/client.ts` (A)
+- `packages/db/src/index.ts` (A)
+
+**packages/shared/:**
+- `packages/shared/eslint.config.mjs` (A)
+- `packages/shared/package.json` (A)
+- `packages/shared/tsconfig.json` (A)
+- `packages/shared/tsdown.config.ts` (A)
+- `packages/shared/src/constants/index.ts` (A)
+- `packages/shared/src/enums/index.ts` (A)
+- `packages/shared/src/index.ts` (A)
+- `packages/shared/src/schemas/index.ts` (A)
+- `packages/shared/src/types/index.ts` (A)
+
+**packages/tokens/:**
+- `packages/tokens/eslint.config.mjs` (A)
+- `packages/tokens/package.json` (A)
+- `packages/tokens/sd.config.mjs` (A)
+- `packages/tokens/tsconfig.json` (A)
+- `packages/tokens/tsdown.config.ts` (A)
+- `packages/tokens/src/index.ts` (A)
+- `packages/tokens/src/moments.ts` (A)
+- `packages/tokens/tokens/color/member.tokens.json` (A)
+- `packages/tokens/tokens/color/moment.tokens.json` (A)
+- `packages/tokens/tokens/color/neutral.dark.tokens.json` (A)
+- `packages/tokens/tokens/color/neutral.tokens.json` (A)
+- `packages/tokens/tokens/color/semantic.tokens.json` (A)
+- `packages/tokens/tokens/radius.tokens.json` (A)
+- `packages/tokens/tokens/spacing.tokens.json` (A)
+- `packages/tokens/tokens/typography.tokens.json` (A)
+
+**docs/:**
+- `docs/backlog-infra.md` (A)
+- `docs/ci-security-pipeline.md` (A)
+- `docs/cloudflare-setup.md` (A)
+- `docs/infrastructure-setup.md` (A)
+- `docs/scaling-roadmap.md` (A)
+- `docs/technical/docker-infrastructure.md` (A)
+- `docs/onboarding/architecture-api.md` (A)
+- `docs/onboarding/developer-guide.md` (A)
+- `docs/onboarding/development-workflow.md` (A)
+- `docs/onboarding/infrastructure-overview.md` (A)
+
+*Legend: (A) = Added, (M) = Modified*

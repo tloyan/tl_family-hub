@@ -596,10 +596,11 @@ family-hub est une application multi-plateforme avec trois surfaces :
 
 | Package | Contenu | Consommateurs |
 |---|---|---|
-| `shared` | Types, constantes, validations | Mobile, Web, Backend |
-| `api-client` | Client API type | Mobile, Web |
-| `ui-primitives` | Composants UI partages (si pertinent) | Mobile, Web (via adaptation) |
-| `auth` | Logique authentification client | Mobile, Web |
+| `shared` | Types, constantes, validations Zod, enums | Mobile, Web, Backend |
+| `db` | Schema Prisma, migrations, seed | Backend |
+| `tokens` | Design tokens (couleurs, typo, spacing) + generation configs Tailwind | Mobile, Web |
+| `config-eslint` | Config ESLint partagee | Tous |
+| `config-ts` | Config TypeScript partagee | Tous |
 
 **Performance mobile** :
 - Lazy loading des ecrans non critiques
