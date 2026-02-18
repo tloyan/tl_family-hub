@@ -2,15 +2,19 @@
 
 ## Overview
 
-This monorepo uses three GitHub-managed automation systems:
+This monorepo uses five GitHub-managed automation systems:
 
-| System         | File                           | Purpose                                 |
-| -------------- | ------------------------------ | --------------------------------------- |
-| **CI**         | `.github/workflows/ci.yml`     | Validates code quality on every push/PR |
-| **CodeQL**     | `.github/workflows/codeql.yml` | Static security analysis                |
-| **Dependabot** | `.github/dependabot.yml`       | Automated dependency updates            |
+| System         | File                           | Purpose                                      |
+| -------------- | ------------------------------ | -------------------------------------------- |
+| **CI**         | `.github/workflows/ci.yml`     | Validates code quality + coverage on push/PR |
+| **Deploy**     | `.github/workflows/deploy.yml` | Deploys API, Web, Mobile after CI passes     |
+| **SonarCloud** | (step in `ci.yml`)             | Quality gate + coverage analysis             |
+| **CodeQL**     | `.github/workflows/codeql.yml` | Static security analysis                     |
+| **Dependabot** | `.github/dependabot.yml`       | Automated dependency updates                 |
 
 All workflows trigger on branches `main` and `dev`. Dependabot targets `dev` as its base branch.
+
+> **Etat actuel (fevrier 2026) :** La CI/CD est **pleinement operationnelle sur `dev` uniquement**. Le CI (lint, tests, build, SonarCloud) tourne sur les deux branches, mais le deploy workflow n'a ete teste et valide qu'en environnement `dev`. Le deploiement vers `main`/production n'est pas encore en place — les environments GitHub (`production`), les secrets Doppler (`prd`), les integrations Railway/Vercel production, et les domaines custom de production ne sont pas encore tous configures. Voir `docs/backlog-infra.md` pour le detail.
 
 ---
 
@@ -24,12 +28,14 @@ All workflows trigger on branches `main` and `dev`. Dependabot targets `dev` as 
 ### Pipeline
 
 ```
-checkout → pnpm 10.27.0 → Node 22 (with pnpm cache)
+checkout (fetch-depth: 0) → pnpm 10.27.0 → Node 22 (with pnpm cache)
 → cache .turbo → pnpm install --frozen-lockfile
-→ format:check → lint → typecheck → test → build
+→ format:check → lint → typecheck → test:coverage → build → SonarCloud scan
 ```
 
 Steps run sequentially from fastest to slowest (fail-fast strategy). Turborepo handles internal parallelization of monorepo tasks.
+
+`fetch-depth: 0` is required for SonarCloud to access the full git history for blame and new code detection.
 
 ### Infrastructure
 
@@ -57,6 +63,235 @@ If a step needs a real secret (e.g., an API key for integration tests):
 1. Go to GitHub repo → Settings → Secrets and variables → Actions
 2. Add the secret (e.g., `STRIPE_TEST_KEY`)
 3. Reference it in the workflow: `${{ secrets.STRIPE_TEST_KEY }}`
+
+---
+
+## Test Coverage
+
+### Current Scope
+
+Coverage is collected for **`apps/api` only** (the only app with tests at this stage). Other apps/packages will be added as tests are written.
+
+### Configuration
+
+| File                        | What it does                                              |
+| --------------------------- | --------------------------------------------------------- |
+| `apps/api/vitest.config.ts` | Coverage config: `v8` provider, `lcov` + `text` reporters |
+| `apps/api/package.json`     | `test:coverage` script: `vitest run --coverage`           |
+| `turbo.json`                | `test:coverage` task with `coverage/**` outputs           |
+| Root `package.json`         | `test:coverage` script: `turbo run test:coverage`         |
+
+### Coverage Rules
+
+- **Provider:** `v8` (native V8 code coverage — fast, no instrumentation)
+- **Reporters:** `text` (console summary) + `lcov` (for SonarCloud)
+- **Output:** `apps/api/coverage/lcov.info`
+- **Included:** `src/**/*.ts`
+- **Excluded:** `*.spec.ts`, `*.module.ts`, `main.ts`
+
+### Running Locally
+
+```bash
+pnpm test:coverage
+```
+
+### Adding Coverage for a New App
+
+1. Install `@vitest/coverage-v8` as a devDependency in the app
+2. Add `coverage` config to the app's `vitest.config.ts` (same pattern as API)
+3. Add `test:coverage` script to the app's `package.json`
+4. Add the lcov path to `sonar-project.properties` → `sonar.javascript.lcov.reportPaths` (comma-separated)
+
+---
+
+## SonarCloud
+
+### What It Does
+
+SonarCloud performs static analysis on every PR and reports: bugs, vulnerabilities, code smells, duplications, and test coverage. Results appear as a **PR comment** (PR decoration) and on the [SonarCloud dashboard](https://sonarcloud.io).
+
+### Analysis Method
+
+**CI-based** (not Automatic Analysis). The CI workflow runs tests with coverage, generates `lcov.info`, and the SonarCloud scan step uploads everything. CI-based is required to include test coverage in the analysis — Automatic Analysis cannot access coverage reports.
+
+> **Important:** Automatic Analysis must be **disabled** in SonarCloud (Administration → Analysis Method) to avoid duplicate analyses.
+
+### Configuration
+
+| File                       | What it does                                                           |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `sonar-project.properties` | Project key, organization, sources, exclusions, lcov paths             |
+| `.github/workflows/ci.yml` | `SonarSource/sonarqube-scan-action@v6` step (skipped if token missing) |
+
+**Project properties:**
+
+- **Organization:** `tloyan`
+- **Project key:** `tloyan_tl_family-hub`
+- **Sources:** `apps/api/src`, `apps/web/app`, `apps/web/components`, `apps/web/lib`, `apps/mobile/app`, `apps/mobile/components`, `apps/mobile/lib`, `packages/shared/src`, `packages/db/src`, `packages/tokens/src`
+- **Tests:** `apps/api/test`
+- **Exclusions:** `node_modules`, `dist`, `.next`, `coverage`, `*.config.*`, `generated`, `prisma/migrations`
+
+### Quality Gate
+
+Uses the default **"Sonar way"** gate, applied to **new code only** (not the entire codebase):
+
+| Metric          | Threshold |
+| --------------- | --------- |
+| Coverage        | >= 80%    |
+| Duplications    | <= 3%     |
+| Maintainability | Rating A  |
+| Reliability     | Rating A  |
+| Security        | Rating A  |
+
+### Secret
+
+`SONAR_TOKEN` must be set as a **repository-level** secret in GitHub (not environment-level — the CI job does not use a GitHub Environment).
+
+The SonarCloud step includes `if: env.SONAR_TOKEN != ''` so CI still passes if the token is not configured.
+
+---
+
+## Deploy Workflow
+
+> **Etat actuel :** Operationnel sur `dev` uniquement. Le workflow se declenche aussi pour `main` mais les secrets et environments de production ne sont pas encore configures (voir `docs/backlog-infra.md`).
+
+### Trigger
+
+Runs after CI succeeds on `main` or `dev` via `workflow_run`.
+
+### Jobs
+
+```
+setup (determine environment: dev or production)
+→ deploy-api (Railway)
+→ deploy-web (Vercel) — depends on deploy-api
+→ deploy-mobile (EAS Update) — depends on deploy-api
+```
+
+### deploy-api (Railway)
+
+1. Checkout at the exact SHA
+2. Install Railway CLI
+3. `railway up --detach` — Railway builds from the Dockerfile
+4. Wait 30s + health check (`GET /health`, 10 retries × 15s)
+
+### deploy-web (Vercel)
+
+1. Checkout + pnpm + Node.js setup
+2. `vercel pull` → `vercel build` → `vercel deploy --prebuilt`
+3. Health check on the deployed URL (accepts 200 or 401)
+
+### deploy-mobile (EAS Update)
+
+1. Checkout + pnpm + Node.js setup
+2. **Fetch Doppler secrets** (injects `EXPO_PUBLIC_GRAPHQL_URL` and other env vars needed by the Expo build)
+3. Install dependencies + build workspace packages (tokens)
+4. `eas update --channel <environment>`
+
+### Secrets par job
+
+| Job           | Secrets used                                         | Source             |
+| ------------- | ---------------------------------------------------- | ------------------ |
+| deploy-api    | `RAILWAY_TOKEN`                                      | GitHub Environment |
+| deploy-web    | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | GitHub Environment |
+| deploy-mobile | `EXPO_TOKEN`, `DOPPLER_TOKEN`                        | GitHub Environment |
+
+---
+
+## Doppler (Secrets Management)
+
+### What It Does
+
+Doppler centralizes application secrets across all environments. Instead of managing env vars separately in Railway, Vercel, and GitHub, secrets are defined once in Doppler and synced automatically.
+
+### Architecture
+
+```
+Doppler (source of truth)
+├── dev config → Railway dev (native integration, auto-sync)
+│                → Vercel preview (native integration, auto-sync)
+│                → GitHub Actions deploy-mobile (via DOPPLER_TOKEN + CLI)
+├── prd config → Railway production (native integration, auto-sync)
+│                → Vercel production (native integration, auto-sync)
+│                → GitHub Actions deploy-mobile (via DOPPLER_TOKEN + CLI)
+└── dev_tloyan → Local development (doppler run --)
+```
+
+### What goes in Doppler (application secrets)
+
+| Variable                  | Environments |
+| ------------------------- | ------------ |
+| `DATABASE_URL`            | dev, prd     |
+| `BETTER_AUTH_SECRET`      | dev, prd     |
+| `BETTER_AUTH_URL`         | dev, prd     |
+| `GOOGLE_CLIENT_ID`        | dev, prd     |
+| `GOOGLE_CLIENT_SECRET`    | dev, prd     |
+| `REDIS_URL`               | dev, prd     |
+| `NEXT_PUBLIC_GRAPHQL_URL` | dev, prd     |
+| `EXPO_PUBLIC_GRAPHQL_URL` | dev, prd     |
+| `NODE_ENV`                | dev, prd     |
+| `PORT`                    | dev, prd     |
+
+### What stays in GitHub (deployment tokens)
+
+`RAILWAY_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `EXPO_TOKEN`, `API_URL` (var), `SONAR_TOKEN`
+
+These are platform tokens that authenticate the CI/CD runner to the deployment platform. They don't belong in Doppler because they're only used in GitHub Actions, not by the applications.
+
+### Native Integrations
+
+- **Railway:** Doppler → Integrations → Railway. Secrets are auto-synced; Railway redeploys automatically when a secret changes.
+- **Vercel:** Doppler → Integrations → Vercel. Secrets are auto-synced to the correct environment (Preview/Production).
+
+### CI Usage
+
+Only `deploy-mobile` uses Doppler in CI (Railway and Vercel sync natively). The step installs the Doppler CLI via `dopplerhq/cli-action@v3`, then fetches secrets into `$GITHUB_ENV`.
+
+### Local Development
+
+```bash
+# First time setup
+brew install doppler
+doppler login
+doppler setup  # select project: family-hub, config: dev_tloyan
+
+# Run dev with Doppler-injected secrets (no .env file needed)
+pnpm dev:doppler
+```
+
+The personal config `dev_tloyan` inherits from `dev` and overrides values for local development (localhost URLs, local DB, etc.).
+
+### CI does NOT use Doppler
+
+The CI workflow uses hardcoded dummy env vars (see Environment Variables table above). This is intentional — CI runs against a local PostgreSQL service container, not real infrastructure.
+
+---
+
+## Rollback — Current Limitations
+
+### No Automated Rollback Mechanism
+
+The current deploy pipeline does **not** include automated rollback. If a deployment breaks production:
+
+| Platform | Manual Rollback Procedure                                                           |
+| -------- | ----------------------------------------------------------------------------------- |
+| Railway  | Dashboard → Deployments → click on previous healthy deployment → **Redeploy**       |
+| Vercel   | Dashboard → Deployments → click on previous deployment → **Promote to Production**  |
+| Mobile   | EAS does not support rollback — must push a new `eas update` with the previous code |
+
+### What's Missing
+
+1. **No automatic rollback on health check failure.** If the health check fails after deployment, the workflow exits with an error but leaves the broken deployment live.
+2. **No version tracking in deploys.** The deploy workflow does not tag commits or record which SHA is deployed to which environment.
+3. **No canary or blue-green strategy.** Deployments are all-or-nothing replacements.
+
+### Planned Improvements
+
+These should be addressed before going to production with real users:
+
+- **Health check failure → automatic rollback** via Railway API (`POST /v2/deployments/{id}/rollback`) and Vercel CLI (`vercel rollback`)
+- **Deploy annotations** — tag successful deploys with `deployed/<env>` git tags or GitHub Deployments API
+- **Slack/Discord notifications** on deploy success/failure
 
 ---
 

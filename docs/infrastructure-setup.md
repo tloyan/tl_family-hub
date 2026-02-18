@@ -4,6 +4,8 @@ Guide de mise en place de l'infrastructure cloud pour les 2 environnements (dev 
 
 **Plans :** Tous gratuits/trial pour demarrer.
 
+> **Etat actuel (fevrier 2026) :** L'infrastructure est **pleinement operationnelle en environnement `dev` uniquement**. Les services cloud (Supabase, Upstash, Railway, Vercel) sont configures pour `dev`. L'environnement `production` (`main`) n'est pas encore en place — il necessite la configuration des secrets Doppler `prd`, des integrations Railway/Vercel production, et des domaines custom de production. Voir `docs/backlog-infra.md` pour le detail.
+
 ---
 
 ## 1. Supabase Free — PostgreSQL (2 projets)
@@ -74,21 +76,11 @@ Railway gere nativement les environnements dans un meme projet.
 
 4. Dans le projet → **Environments** (en haut) → **New Environment** → nommer `dev`
 
-### Variables d'environnement (chaque environnement)
+### Variables d'environnement
 
-Cliquer sur le service → **Variables** :
+Les variables d'environnement de Railway sont gerees par **Doppler** via integration native (voir section 7 ci-dessous). Doppler synchronise automatiquement les secrets vers Railway — toute modification dans Doppler declenche un redeploy automatique.
 
-| Variable               | Dev                                    | Prod                               |
-| ---------------------- | -------------------------------------- | ---------------------------------- |
-| `NODE_ENV`             | `development`                          | `production`                       |
-| `DATABASE_URL`         | (Supabase dev pooler)                  | (Supabase prod pooler)             |
-| `REDIS_URL`            | (Upstash)                              | (Upstash)                          |
-| `BETTER_AUTH_SECRET`   | `openssl rand -base64 32`              | (generer un DIFFERENT)             |
-| `BETTER_AUTH_URL`      | `https://dev-api-familyhub.tloyan.com` | `https://api-familyhub.tloyan.com` |
-| `GOOGLE_CLIENT_ID`     | (a configurer lors de l'auth)          | (a configurer lors de l'auth)      |
-| `GOOGLE_CLIENT_SECRET` | (a configurer lors de l'auth)          | (a configurer lors de l'auth)      |
-
-> `PORT` n'est PAS necessaire — Railway l'injecte automatiquement.
+> Ne pas ajouter de variables manuellement dans Railway. Utiliser Doppler comme source unique.
 
 ### Branches de deploiement
 
@@ -125,12 +117,9 @@ Vercel gere les environnements nativement : **Production** (branche `main`) + **
 
 ### Variables d'environnement
 
-Settings → Environment Variables :
+Les variables d'environnement de Vercel sont gerees par **Doppler** via integration native (voir section 7 ci-dessous). Doppler synchronise automatiquement les secrets vers les environnements Vercel (Production/Preview).
 
-| Variable                  | Environments         | Value                                          |
-| ------------------------- | -------------------- | ---------------------------------------------- |
-| `NEXT_PUBLIC_GRAPHQL_URL` | Production           | `https://api-familyhub.tloyan.com/graphql`     |
-| `NEXT_PUBLIC_GRAPHQL_URL` | Preview, Development | `https://dev-api-familyhub.tloyan.com/graphql` |
+> Ne pas ajouter de variables manuellement dans Vercel. Utiliser Doppler comme source unique.
 
 ### Domaines
 
@@ -165,7 +154,96 @@ Vercel Dashboard → domaine `tloyan.com` → DNS Records :
 
 ---
 
-## 6. Verification post-deploiement
+## 6. Doppler — Secrets Management
+
+Doppler centralise tous les secrets applicatifs. Les plateformes (Railway, Vercel) recoivent leurs secrets automatiquement via des integrations natives.
+
+### Projet
+
+- **Workplace :** `tloyan`
+- **Project :** `family-hub`
+- **Environments :** `dev`, `prd` (ignorer `stg`)
+- **Personal config :** `dev_tloyan` (branch de `dev` pour le dev local)
+
+### Secrets geres par Doppler
+
+| Variable                  | dev                                            | prd                                        |
+| ------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| `NODE_ENV`                | `production`                                   | `production`                               |
+| `PORT`                    | `8080`                                         | `8080`                                     |
+| `DATABASE_URL`            | Supabase dev connection string                 | Supabase prod connection string            |
+| `BETTER_AUTH_SECRET`      | (genere avec `openssl rand -base64 32`)        | (genere DIFFERENT)                         |
+| `BETTER_AUTH_URL`         | `https://dev-api-familyhub.tloyan.com`         | `https://api-familyhub.tloyan.com`         |
+| `GOOGLE_CLIENT_ID`        | Google OAuth client ID                         | Google OAuth client ID                     |
+| `GOOGLE_CLIENT_SECRET`    | Google OAuth client secret                     | Google OAuth client secret                 |
+| `REDIS_URL`               | Upstash dev connection string                  | Upstash prod connection string             |
+| `NEXT_PUBLIC_GRAPHQL_URL` | `https://dev-api-familyhub.tloyan.com/graphql` | `https://api-familyhub.tloyan.com/graphql` |
+| `EXPO_PUBLIC_GRAPHQL_URL` | `https://dev-api-familyhub.tloyan.com/graphql` | `https://api-familyhub.tloyan.com/graphql` |
+
+### Ports
+
+- **Environnements deployes (Railway)** : `PORT=8080` — c'est le port sur lequel Railway route le trafic public via son reverse proxy
+- **Dev local** : `PORT=4000` — convention locale, override dans le personal config `dev_tloyan`
+
+Le Dockerfile definit `ENV PORT=4000` comme valeur par defaut, mais Railway injecte `PORT=8080` au runtime qui surcharge cette valeur. Le `main.ts` lit `process.env['PORT'] ?? 4000`.
+
+### Personal config (dev local)
+
+Le config `dev_tloyan` herite de `dev` et override les valeurs pour localhost :
+
+- `NODE_ENV` → `development`
+- `PORT` → `4000`
+- `DATABASE_URL` → `postgresql://postgres:postgres@localhost:5432/family_hub`
+- `REDIS_URL` → `redis://localhost:6379`
+- `BETTER_AUTH_URL` → `http://localhost:4000`
+- `NEXT_PUBLIC_GRAPHQL_URL` → `http://localhost:4000/graphql`
+- `EXPO_PUBLIC_GRAPHQL_URL` → `http://localhost:4000/graphql`
+
+### Integrations natives
+
+| Integration | Mapping Doppler → Plateforme                                  |
+| ----------- | ------------------------------------------------------------- |
+| Railway     | `dev` → Railway env `dev`, `prd` → Railway env `production`   |
+| Vercel      | `dev` → Vercel env `Preview`, `prd` → Vercel env `Production` |
+
+Les modifications dans Doppler declenchent automatiquement un redeploy sur Railway. Vercel utilise les nouvelles valeurs au prochain deploy.
+
+### Service Tokens (GitHub Actions)
+
+| Config | Token name           | GitHub location                                      |
+| ------ | -------------------- | ---------------------------------------------------- |
+| `dev`  | `github-actions-dev` | Environments → `dev` → Secret `DOPPLER_TOKEN`        |
+| `prd`  | `github-actions-prd` | Environments → `production` → Secret `DOPPLER_TOKEN` |
+
+Seul le job `deploy-mobile` utilise ces tokens (Railway/Vercel sync nativement).
+
+### Secrets qui restent dans GitHub
+
+| Secret              | Pourquoi                                               |
+| ------------------- | ------------------------------------------------------ |
+| `RAILWAY_TOKEN`     | Authentifie le CLI Railway — pas un secret applicatif  |
+| `VERCEL_TOKEN`      | Authentifie le CLI Vercel — pas un secret applicatif   |
+| `VERCEL_ORG_ID`     | Identifiant Vercel org — pas un secret applicatif      |
+| `VERCEL_PROJECT_ID` | Identifiant Vercel project — pas un secret applicatif  |
+| `EXPO_TOKEN`        | Authentifie EAS CLI — pas un secret applicatif         |
+| `SONAR_TOKEN`       | Authentifie SonarCloud — pas un secret applicatif      |
+| `API_URL` (var)     | URL pour le health check deploy — variable, pas secret |
+
+### Dev local
+
+```bash
+# Installation (une seule fois)
+brew install doppler
+doppler login
+doppler setup  # selectionner project: family-hub, config: dev_tloyan
+
+# Lancer le dev (injecte les secrets sans fichier .env)
+pnpm dev:doppler
+```
+
+---
+
+## 7. Verification post-deploiement
 
 ```bash
 # API dev
@@ -191,19 +269,26 @@ curl -v https://api-familyhub.tloyan.com/health 2>&1 | grep "TLS"
 
 ---
 
-## 7. Checklist de deploiement
+## 8. Checklist de deploiement
 
-- [ ] Supabase : 2 projets crees (dev + prod)
-- [ ] Upstash : Redis cree avec TLS + Eviction
-- [ ] Railway : Projet cree avec 2 environnements (dev + production)
-- [ ] Railway : Variables d'environnement configurees pour chaque env
-- [ ] Railway : Branches de deploiement configurees (dev → `dev`, production → `main`)
-- [ ] Railway : Domaines publics generes
-- [ ] Vercel : Projet cree avec root directory `apps/web`
-- [ ] Vercel : Variables d'environnement configurees
-- [ ] Vercel : Domaines ajoutes (`familyhub.tloyan.com` + `dev-familyhub.tloyan.com`)
-- [ ] DNS : CNAME `api-familyhub` → Railway prod
-- [ ] DNS : CNAME `dev-api-familyhub` → Railway dev
+- [x] Supabase : 2 projets crees (dev + prod)
+- [x] Upstash : Redis cree avec TLS + Eviction
+- [x] Railway : Projet cree avec 2 environnements (dev + production)
+- [x] Railway : Branches de deploiement configurees (dev → `dev`, production → `main`)
+- [x] Railway : Domaines publics generes
+- [x] Vercel : Projet cree avec root directory `apps/web`
+- [x] Vercel : Domaines ajoutes (`familyhub.tloyan.com` + `dev-familyhub.tloyan.com`)
+- [x] DNS : CNAME `api-familyhub` → Railway prod
+- [x] DNS : CNAME `dev-api-familyhub` → Railway dev
+- [x] Doppler : Projet `family-hub` cree avec environments `dev` + `prd`
+- [x] Doppler : Secrets remplis pour chaque environment
+- [x] Doppler : Integration Railway configuree (dev + prd)
+- [x] Doppler : Integration Vercel configuree (Preview + Production)
+- [x] Doppler : Service tokens crees pour GitHub Actions (dev + prd)
+- [x] Doppler : Personal config `dev_tloyan` cree pour le dev local
+- [x] GitHub : `SONAR_TOKEN` ajoute comme repo-level secret
+- [x] GitHub : `DOPPLER_TOKEN` ajoute dans les environments dev + production
+- [x] SonarCloud : Projet importe, Automatic Analysis desactivee
 - [ ] Health checks API repondent sur les 2 envs
 - [ ] Web charge sur les 2 envs
 - [ ] TLS 1.3 actif partout

@@ -103,20 +103,20 @@ Afin de disposer d'une fondation production-ready pour construire les features.
   - [x] 6.4 Deployer Next.js sur Vercel Pro (Edge global)
   - [!] 6.5 Configurer Cloudflare Free : DNS + CDN + WAF + TLS 1.3
 
-- [ ] **Task 7 : Secrets et Outils Dev** (AC: #6)
-  - [ ] 7.1 Configurer Doppler pour secrets management (integration GitHub Actions + Railway + Vercel)
+- [x] **Task 7 : Secrets et Outils Dev** (AC: #6)
+  - [x] 7.1 Configurer Doppler pour secrets management (integration GitHub Actions + Railway + Vercel)
   - [x] 7.2 Configurer Husky : pre-commit (lint-staged) + commit-msg (commitlint)
   - [x] 7.3 Creer `commitlint.config.js` avec conventional commits
-  - [ ] 7.4 Configurer SonarCloud pour quality gate + couverture
-  - [ ] 7.5 Documenter `.env.example` avec toutes les variables necessaires
+  - [x] 7.4 Configurer SonarCloud pour quality gate + couverture
+  - [x] 7.5 Documenter `.env.example` avec toutes les variables necessaires
 
-- [ ] **Task 8 : Validation finale** (AC: #1-6)
-  - [ ] 8.1 `pnpm install` sans erreur
-  - [ ] 8.2 `pnpm lint` passe sur toutes les apps/packages
-  - [ ] 8.3 `pnpm typecheck` passe en mode strict
-  - [ ] 8.4 `pnpm build` compile toutes les apps
-  - [ ] 8.5 `docker compose up` fonctionne
-  - [ ] 8.6 Health checks repondent en production (Railway + Vercel)
+- [x] **Task 8 : Validation finale** (AC: #1-6)
+  - [x] 8.1 `pnpm install` sans erreur
+  - [x] 8.2 `pnpm lint` passe sur toutes les apps/packages
+  - [x] 8.3 `pnpm typecheck` passe en mode strict
+  - [x] 8.4 `pnpm build` compile toutes les apps
+  - [x] 8.5 `docker compose up` fonctionne
+  - [x] 8.6 Health checks repondent en production (Railway + Vercel)
 
 ## Dev Notes
 
