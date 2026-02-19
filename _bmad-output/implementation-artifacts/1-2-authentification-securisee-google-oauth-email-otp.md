@@ -1,0 +1,328 @@
+# Story 1.2: Authentification securisee (Google OAuth + Email OTP)
+
+Status: ready-for-dev
+
+<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+
+## Story
+
+As a end user (new or returning visitor),
+I want to create an account and sign in via Google OAuth or email OTP code,
+so that I can access the application without managing a password.
+
+## Acceptance Criteria
+
+### AC1: Google OAuth Authentication
+
+- **Given** je suis sur l'ecran de connexion
+- **When** je tape "Continuer avec Google"
+- **Then** je suis redirige vers le flux Google OAuth et mon compte est cree (si nouveau) ou je suis connecte (si existant)
+
+### AC2: Email OTP — Envoi
+
+- **Given** je suis sur l'ecran de connexion
+- **When** j'entre mon email et tape "Recevoir un code"
+- **Then** je recois un email avec un code OTP a 6 chiffres dans les 30 secondes
+
+### AC3: Email OTP — Verification
+
+- **Given** j'ai recu un email avec un code OTP
+- **When** je saisis le code sur l'ecran de verification (sans quitter l'app)
+- **Then** je suis authentifie et redirige vers l'app
+
+### AC4: Session Management
+
+- **Given** je suis authentifie
+- **When** je verifie la session
+- **Then** elle expire apres 30 jours d'inactivite avec refresh token rotation (NFR10)
+
+### AC5: Mobile Token Storage
+
+- **Given** je suis authentifie sur mobile
+- **When** je verifie le stockage des tokens
+- **Then** ils sont dans expo-secure-store (pas AsyncStorage)
+
+### AC6: Web Cookie Security
+
+- **Given** je suis authentifie sur web
+- **When** je verifie les cookies
+- **Then** les cookies de session sont httpOnly et secure (SameSite=Strict)
+
+### AC7: Transport Security (TLS 1.3)
+
+- **Given** toute communication client-serveur
+- **When** je verifie le transport
+- **Then** toutes les connexions utilisent TLS 1.3 (NFR7)
+
+### AC8: Rate Limiting
+
+- **Given** un utilisateur tente de se connecter
+- **When** il depasse 5 tentatives en 15 minutes (login) ou 3 envois OTP par heure par email
+- **Then** les requetes suivantes sont rejetees avec un message clair
+
+## Tasks / Subtasks
+
+### T1: Configuration Better Auth Server (AC: 1, 2, 3, 4, 8)
+
+- [ ] T1.1: Installer les dependances (`better-auth`, `@better-auth/expo`)
+- [ ] T1.2: Creer `apps/api/src/lib/auth.ts` — instance Better Auth avec Prisma adapter, en reutilisant le `PrismaService` existant via DI NestJS (ne PAS instancier un nouveau `PrismaClient()` — Prisma 7.x requiert le driver adapter `PrismaPg` deja configure dans `PrismaService`)
+- [ ] T1.3: Configurer le social provider Google OAuth avec variables d'environnement Doppler
+- [ ] T1.4: Ajouter le plugin Email OTP avec fonction `sendVerificationOTP` integree a Resend (code 6 chiffres, expiration 10 min)
+- [ ] T1.5: Configurer les sessions (expiration 30 jours, refresh token rotation, httpOnly cookies)
+- [ ] T1.6: Configurer le rate limiting via `@nestjs/throttler` (5 login/15min, 3 OTP/heure/email, 5 verifications OTP/15min)
+- [ ] T1.7: Exposer les routes Better Auth via un catch-all handler NestJS (`/api/auth/*path` — syntaxe Express v5)
+- [ ] T1.8: Configurer `accountLinking.enabled: true` dans Better Auth pour merger automatiquement les comptes par email verifie (preparation pour Apple OAuth futur)
+
+### T2: Schema Prisma Auth (AC: 1, 2, 3, 4)
+
+- [ ] T2.1: Creer `packages/db/prisma/schema/auth.prisma` avec les modeles Better Auth (User, Account, Session, Verification)
+- [ ] T2.2: Generer et appliquer la migration Prisma (`prisma migrate dev`)
+- [ ] T2.3: Verifier la compatibilite avec le schema `base.prisma` existant
+
+### T3: Email Service — Resend + React Email (AC: 2)
+
+- [ ] T3.1: Installer `resend` dans `apps/api`
+- [ ] T3.2: Creer le package `packages/emails/` avec le template React Email `otp-code.tsx` (affiche le code 6 chiffres)
+- [ ] T3.3: Implementer le service d'envoi d'email dans la fonction `sendVerificationOTP` de Better Auth
+- [ ] T3.4: Configurer la variable `RESEND_API_KEY` dans Doppler
+
+### T4: Client Web — Next.js (AC: 1, 3, 6)
+
+- [ ] T4.1: Installer `better-auth` (client) dans `apps/web`
+- [ ] T4.2: Creer `apps/web/lib/auth-client.ts` avec `createAuthClient` + plugin `nextCookies`
+- [ ] T4.3: Creer les pages auth : `apps/web/app/(auth)/login/page.tsx`, `apps/web/app/(auth)/verify-otp/page.tsx`
+- [ ] T4.4: Implementer le formulaire de connexion (email input + bouton OAuth Google)
+- [ ] T4.5: Implementer l'ecran de saisie OTP (6 champs individuels avec auto-focus, timer de renvoi 60s)
+- [ ] T4.6: Ajouter le middleware Next.js pour protection des routes authentifiees
+- [ ] T4.7: Configurer Apollo Client avec `credentials: 'include'` pour transmettre automatiquement les cookies de session Better Auth (pas de header Authorization sur web — auth par cookies)
+
+### T5: Client Mobile — Expo (AC: 1, 3, 5)
+
+- [ ] T5.1: Installer `better-auth` et `@better-auth/expo` dans `apps/mobile`
+- [ ] T5.2: Creer `apps/mobile/lib/auth-client.ts` avec `createAuthClient` + plugin `expoClient` (SecureStore, deep linking)
+- [ ] T5.3: Completer l'ecran existant `apps/mobile/app/(auth)/sign-in.tsx` (le fichier existe deja comme placeholder depuis la story 1-1)
+- [ ] T5.4: Implementer le formulaire mobile (email input + bouton OAuth Google)
+- [ ] T5.5: Configurer le deep linking pour callback OAuth Google (`app.json` scheme)
+- [ ] T5.6: Creer l'ecran `apps/mobile/app/(auth)/verify-otp.tsx` (6 champs, auto-focus, clavier numerique natif)
+
+### T6: Variables d'environnement & Secrets (AC: 1, 2, 7)
+
+- [ ] T6.1: Ajouter dans `.env.example` : `RESEND_API_KEY`, `EXPO_PUBLIC_API_URL`, `NEXT_PUBLIC_API_URL`
+- [ ] T6.2: Configurer les secrets dans Doppler (dev, staging, production)
+- [ ] T6.3: Creer l'OAuth app sur Google Cloud Console (Client IDs pour web, iOS, Android)
+- [ ] T6.4: Configurer les redirect URIs par plateforme (web, iOS, Android)
+
+### T7: Tests (AC: tous)
+
+- [ ] T7.1: Tests unitaires du service auth (Vitest) — OTP generation/validation, session management, rate limiting
+- [ ] T7.2: Tests d'integration (Supertest) — flux OAuth mock, email OTP complet (envoi + verification), account linking
+- [ ] T7.3: Tests e2e web (Playwright) — login Google, login email OTP, logout
+- [ ] T7.4: Tests de securite — cookies httpOnly, session expiry, rate limiting enforcement
+- [ ] T7.5: Ajouter les variables auth au workflow CI (GitHub Secrets)
+
+## Dev Notes
+
+### Architecture & Patterns obligatoires
+
+- **Better Auth** (v1.4.x) gere OAuth, Email OTP, sessions et Prisma adapter nativement
+- **Routes REST Better Auth** exposees via catch-all controller NestJS (`/api/auth/*path`). Les resolvers GraphQL NestJS sont utilises pour les queries/mutations metier, pas pour l'auth elle-meme
+- **Dot-notation** pour tous les fichiers : `auth.module.ts`, `auth.service.ts`, `auth.guard.ts`, `auth.spec.ts`
+- **Custom exceptions uniquement** : Jamais `throw new Error()` — utiliser les exceptions NestJS custom avec codes `AUTH_*`
+- **UUID v7** pour tous les IDs (chronologiquement ordonnables)
+- **Structured logging** : JSON via Pino avec niveaux error/warn/info/debug
+- Pour cette story, le module `auth` n'a aucune dependance sur d'autres modules metier. Les dependances vers `member` et `household` seront ajoutees dans les stories ulterieures (1.3+)
+- Les emails OTP auth sont envoyes directement via Resend dans le callback Better Auth (pas via le module notification/BullMQ). Le module notification sera utilise pour les emails non-auth (invitations, rappels) dans les stories ulterieures
+
+### Apple OAuth (differe)
+
+L'architecture prevoit Apple OAuth en complement de Google OAuth. Apple Sign In est differe car il necessite un compte Apple Developer paye. Il sera ajoute dans une story ulterieure quand le compte sera disponible. Le `accountLinking` est active des maintenant pour que le futur ajout d'Apple OAuth soit transparent (merge automatique par email).
+
+### Better Auth — Configuration cle
+
+```typescript
+// apps/api/src/lib/auth.ts
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { emailOTP } from "better-auth/plugins";
+// IMPORTANT: Reutiliser le PrismaService existant via DI NestJS
+// Ne PAS faire: const prisma = new PrismaClient()
+// Prisma 7.x requiert le driver adapter PrismaPg deja configure dans PrismaService
+
+export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
+  database: prismaAdapter(prismaService, { provider: "postgresql" }),
+  accountLinking: { enabled: true },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+    // Apple OAuth sera ajoute ici dans une story ulterieure
+  },
+  plugins: [
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 600, // 10 minutes en secondes
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        // Envoyer via Resend avec template React Email
+        // type: "sign-in" | "email-verification" | "forget-password"
+      },
+    }),
+  ],
+});
+```
+
+> **Note:** Verifier l'API exacte dans la [doc Better Auth Email OTP](https://www.better-auth.com/docs/plugins/email-otp) car les noms de methodes peuvent varier selon la version. Les snippets ci-dessus sont indicatifs.
+
+### Client-side Email OTP — Flux
+
+```typescript
+// Etape 1: Envoyer le code OTP
+await authClient.emailOtp.sendVerificationOtp({
+  email: "user@example.com",
+  type: "sign-in",
+});
+
+// Etape 2: Verifier le code saisi par l'utilisateur
+const { data, error } = await authClient.signIn.emailOtp({
+  email: "user@example.com",
+  otp: "123456",
+});
+```
+
+### Client Expo — SecureStore obligatoire
+
+```typescript
+// apps/mobile/lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+import { expoClient } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  plugins: [
+    expoClient({
+      scheme: "familyhub",
+      storagePrefix: "familyhub",
+      storage: SecureStore,
+    }),
+  ],
+});
+```
+
+### Client Next.js — nextCookies plugin
+
+```typescript
+// apps/web/lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+// Server-side dans auth.ts: import { nextCookies } from "better-auth/next-js"
+```
+
+### Resend — Template Email OTP
+
+```tsx
+// packages/emails/src/otp-code.tsx
+import { Resend } from 'resend';
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Utiliser dans sendVerificationOTP de Better Auth
+await resend.emails.send({
+  from: 'Family Hub <noreply@family-hub.com>',
+  to: email,
+  subject: 'Votre code de connexion Family Hub',
+  react: <OtpCodeEmail otp={otp} />,
+});
+// Template affiche le code en gros caracteres espaces (ex: "1 2 3 4 5 6")
+// + mention "Ce code expire dans 10 minutes"
+```
+
+### Codes d'erreur auth
+
+| Code | HTTP | Description |
+|------|------|-------------|
+| `AUTH_INVALID_OTP` | 401 | Code OTP incorrect ou expire |
+| `AUTH_OTP_EXPIRED` | 401 | Code OTP expire (> 10 min) |
+| `AUTH_OTP_RATE_LIMITED` | 429 | Trop d'envois OTP pour cet email |
+| `AUTH_LOGIN_RATE_LIMITED` | 429 | Trop de tentatives de connexion |
+| `AUTH_VERIFY_RATE_LIMITED` | 429 | Trop de tentatives de verification OTP |
+| `AUTH_OAUTH_FAILED` | 401 | Le provider OAuth a retourne une erreur |
+| `AUTH_OAUTH_CANCELLED` | 400 | L'utilisateur a annule le flux OAuth |
+| `AUTH_SESSION_EXPIRED` | 401 | Session expiree |
+
+### Rate Limiting
+
+| Endpoint | Limite | Fenetre |
+|----------|--------|---------|
+| Login (OAuth callback) | 5 tentatives | 15 minutes |
+| OTP send | 3 envois | 1 heure par email |
+| OTP verify | 5 tentatives | 15 minutes par email |
+| Token refresh | 10 requetes | 1 minute |
+
+### Variables d'environnement requises
+
+| Variable | Description | Deja dans .env.example |
+|----------|-------------|------------------------|
+| `BETTER_AUTH_SECRET` | Cle de chiffrement sessions | Oui |
+| `BETTER_AUTH_URL` | URL base du serveur auth | Oui |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Oui |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Oui |
+| `RESEND_API_KEY` | Cle API Resend pour emails | **Non — a ajouter** |
+| `EXPO_PUBLIC_API_URL` | URL API pour le client mobile | **Non — a ajouter** |
+| `NEXT_PUBLIC_API_URL` | URL API pour le client web | **Non — a ajouter** |
+| `DATABASE_URL` | Connexion PostgreSQL Prisma | Oui |
+
+### Compatibilite avec Story 1-1
+
+- **Prisma 7.x ESM-only** : Config dans `prisma.config.ts`, driver adapters (`@prisma/adapter-pg` + `pg`) obligatoires. Reutiliser `PrismaService` existant
+- **NestJS 11.x + Express v5** : Routes wildcards changees (`/api/auth/*path` au lieu de `/api/auth/*`)
+- **TypeScript strict mode** : Tous les fichiers
+- **Tailwind v4 (web)** / **Tailwind v3.4 + NativeWind v4 (mobile)** : Deux configs distinctes
+
+### UX — Points critiques
+
+- **Deux methodes co-egales** : Google OAuth et Email OTP presentes avec la meme importance visuelle
+- **Ecran OTP** : 6 champs individuels avec auto-focus au champ suivant, clavier numerique natif sur mobile, timer de renvoi (desactive 60s puis "Renvoyer le code"), mention expiration 10 min
+- **Pas de celebration** : Transition silencieuse vers le Home Hub apres auth reussie
+- **Erreurs inline** : Jamais de popups — messages sous les champs avec ton factuel et chemin de resolution
+- **Touch targets** : Minimum 48px sur mobile, 44px sur web
+- **Accessibilite WCAG 2.1 AA** : Contraste 4.5:1, labels visibles, aria-labels, navigation clavier complete
+- **Responsive** : Mobile-first, formulaire centre max 400px sur desktop
+
+### Project Structure Notes
+
+- `apps/api/src/modules/auth/` — Module NestJS auth (nouveau)
+- `apps/api/src/lib/auth.ts` — Instance Better Auth (nouveau)
+- `apps/api/src/common/guards/auth.guard.ts` — Guard de base pour routes authentifiees (nouveau — utilise par les stories suivantes)
+- `packages/db/prisma/schema/auth.prisma` — Schema Prisma auth (nouveau)
+- `packages/emails/` — Package templates email (nouveau)
+- `apps/web/app/(auth)/login/page.tsx` — Page login web (nouveau)
+- `apps/web/app/(auth)/verify-otp/page.tsx` — Page verification OTP web (nouveau)
+- `apps/web/lib/auth-client.ts` — Client auth web (nouveau)
+- `apps/mobile/app/(auth)/sign-in.tsx` — Ecran auth mobile (existant depuis story 1-1, a completer)
+- `apps/mobile/app/(auth)/verify-otp.tsx` — Ecran verification OTP mobile (nouveau)
+- `apps/mobile/lib/auth-client.ts` — Client auth mobile (nouveau)
+
+### References
+
+- [Source: _bmad-output/planning-artifacts/epics.md#Epic-1, Story 1.2]
+- [Source: _bmad-output/planning-artifacts/architecture.md#Authentication, #Security, #Database-Schema]
+- [Source: _bmad-output/planning-artifacts/prd.md#FR35, #NFR7, #NFR8, #NFR9, #NFR10]
+- [Source: _bmad-output/planning-artifacts/ux-design-specification.md#Authentication-Flows, #Error-States]
+- [Source: _bmad-output/implementation-artifacts/1-1-initialisation-monorepo-ci-cd-et-deploiement.md#Dev-Notes]
+- [Docs: Better Auth — https://www.better-auth.com/docs]
+- [Docs: Resend Node.js SDK — https://resend.com/docs]
+- [Docs: Better Auth Expo Integration — https://www.better-auth.com/docs/integrations/expo]
+- [Docs: Better Auth Email OTP Plugin — https://www.better-auth.com/docs/plugins/email-otp]
+- [Docs: Better Auth Next.js Integration — https://www.better-auth.com/docs/integrations/next]
+
+## Dev Agent Record
+
+### Agent Model Used
+
+Claude Opus 4.6 (claude-opus-4-6)
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
