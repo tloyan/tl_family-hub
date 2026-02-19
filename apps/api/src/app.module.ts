@@ -3,6 +3,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
+import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 
@@ -22,6 +23,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
       sortSchema: true,
     }),
     PrismaModule,
+    AuthModule,
     HealthModule,
   ],
 })

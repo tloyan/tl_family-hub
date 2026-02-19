@@ -64,14 +64,14 @@ so that I can access the application without managing a password.
 
 ### T1: Configuration Better Auth Server (AC: 1, 2, 3, 4, 8)
 
-- [ ] T1.1: Installer les dependances (`better-auth`, `@better-auth/expo`)
-- [ ] T1.2: Creer `apps/api/src/lib/auth.ts` — instance Better Auth avec Prisma adapter, en reutilisant le `PrismaService` existant via DI NestJS (ne PAS instancier un nouveau `PrismaClient()` — Prisma 7.x requiert le driver adapter `PrismaPg` deja configure dans `PrismaService`)
-- [ ] T1.3: Configurer le social provider Google OAuth avec variables d'environnement Doppler
-- [ ] T1.4: Ajouter le plugin Email OTP avec fonction `sendVerificationOTP` integree a Resend (code 6 chiffres, expiration 10 min)
-- [ ] T1.5: Configurer les sessions (expiration 30 jours, refresh token rotation, httpOnly cookies)
-- [ ] T1.6: Configurer le rate limiting via `@nestjs/throttler` (5 login/15min, 3 OTP/heure/email, 5 verifications OTP/15min)
-- [ ] T1.7: Exposer les routes Better Auth via un catch-all handler NestJS (`/api/auth/*path` — syntaxe Express v5)
-- [ ] T1.8: Configurer `accountLinking.enabled: true` dans Better Auth pour merger automatiquement les comptes par email verifie (preparation pour Apple OAuth futur)
+- [x] T1.1: Installer les dependances (`better-auth`, `@better-auth/expo`)
+- [x] T1.2: Creer `apps/api/src/lib/auth.ts` — instance Better Auth avec Prisma adapter, en reutilisant le `PrismaService` existant via DI NestJS (ne PAS instancier un nouveau `PrismaClient()` — Prisma 7.x requiert le driver adapter `PrismaPg` deja configure dans `PrismaService`)
+- [x] T1.3: Configurer le social provider Google OAuth avec variables d'environnement Doppler
+- [x] T1.4: Ajouter le plugin Email OTP avec fonction `sendVerificationOTP` placeholder `console.log` (code 6 chiffres, expiration 10 min) — Resend differe a T3
+- [x] T1.5: Configurer les sessions (expiration 30 jours, refresh token rotation, httpOnly cookies)
+- [x] T1.6: Configurer le rate limiting via Better Auth built-in `rateLimit` (5 login/15min, 3 OTP/heure, 5 verifications OTP/15min) — les routes auth bypasses NestJS, donc `@nestjs/throttler` ne s'applique pas
+- [x] T1.7: Exposer les routes Better Auth via un catch-all handler NestJS (`/api/auth/*path` — syntaxe Express v5)
+- [x] T1.8: Configurer `accountLinking.enabled: true` dans Better Auth pour merger automatiquement les comptes par email verifie (preparation pour Apple OAuth futur)
 
 ### T2: Schema Prisma Auth (AC: 1, 2, 3, 4)
 
@@ -324,5 +324,17 @@ Claude Opus 4.6 (claude-opus-4-6)
 ### Debug Log References
 
 ### Completion Notes List
+
+#### T1: Configuration Better Auth Server
+
+**Ecarts par rapport au spec original :**
+
+- **T1.4 — Resend differe a T3 :** `sendVerificationOTP` utilise un placeholder `console.log` au lieu de Resend. La dependance `resend` n'est pas installee dans T1. L'integration email complete (Resend + React Email template) sera faite dans T3.
+- **T1.6 — Rate limiting via Better Auth built-in :** Le spec mentionnait `@nestjs/throttler`, mais les routes auth passent par `toNodeHandler` et contournent le pipeline NestJS (guards, interceptors). Le rate limiting est donc gere par la config `rateLimit` native de Better Auth. Les limites sont per-IP (limitation Better Auth — le per-email necessiterait un `customStorage`, accepte pour le MVP).
+- **Rate limits corriges :** Les fenetres/limites ont ete alignees sur le spec AC8 : 5 login/15min (900s), 3 OTP send/1h (3600s), 5 OTP verify/15min (900s). Les valeurs initiales (60s/10, 60s/5, 60s/5) etaient incorrectes.
+- **`trustedOrigins` configurable :** Rendu configurable via variable d'environnement `TRUSTED_ORIGINS` (comma-separated) en plus du scheme `familyhub://` hardcode.
+- **`getRequestFromContext` helper :** La logique d'extraction de `Request` depuis un `ExecutionContext` NestJS (HTTP ou GraphQL) etait dupliquee entre `auth.guard.ts` et `current-user.decorator.ts`. Factorisee dans `common/utils/get-request.ts`.
+- **Imports statiques :** Les imports dynamiques `await import()` et `onModuleInit()` ont ete remplaces par des imports statiques et une initialisation dans les constructeurs. Node.js 25 supporte `require()` de modules ESM synchrones nativement.
+- **Variables d'environnement :** `RESEND_API_KEY` et `SENDER_EMAIL` retires de `.env.example` et `turbo.json` (seront re-ajoutes dans T3). `TRUSTED_ORIGINS` ajoute.
 
 ### File List

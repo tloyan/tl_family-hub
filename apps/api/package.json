@@ -20,6 +20,7 @@
   "dependencies": {
     "@apollo/server": "^5.0.0",
     "@as-integrations/express5": "^1.1.0",
+    "@better-auth/expo": "^1.4.18",
     "@family-hub/db": "workspace:*",
     "@family-hub/shared": "workspace:*",
     "@nestjs/apollo": "^13.0.0",
@@ -29,6 +30,7 @@
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/terminus": "^11.0.0",
     "@prisma/adapter-pg": "^7.2.0",
+    "better-auth": "^1.4.18",
     "graphql": "^16.10.0",
     "nestjs-pino": "^4.5.0",
     "pg": "^8.16.0",
