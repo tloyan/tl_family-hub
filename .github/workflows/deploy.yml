@@ -45,6 +45,31 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Fetch Doppler secrets
+        run: doppler secrets download --no-file --format env-no-quotes >> "$GITHUB_ENV"
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Apply database migrations
+        run: pnpm --filter @family-hub/db db:migrate:deploy
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 

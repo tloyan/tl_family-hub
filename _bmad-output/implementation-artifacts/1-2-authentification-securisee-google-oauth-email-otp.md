@@ -75,9 +75,9 @@ so that I can access the application without managing a password.
 
 ### T2: Schema Prisma Auth (AC: 1, 2, 3, 4)
 
-- [ ] T2.1: Creer `packages/db/prisma/schema/auth.prisma` avec les modeles Better Auth (User, Account, Session, Verification)
-- [ ] T2.2: Generer et appliquer la migration Prisma (`prisma migrate dev`)
-- [ ] T2.3: Verifier la compatibilite avec le schema `base.prisma` existant
+- [x] T2.1: Creer `packages/db/prisma/schema/auth.prisma` avec les modeles Better Auth (User, Account, Session, Verification)
+- [x] T2.2: Generer et appliquer la migration Prisma (`prisma migrate dev`)
+- [x] T2.3: Verifier la compatibilite avec le schema `base.prisma` existant
 
 ### T3: Email Service — Resend + React Email (AC: 2)
 
