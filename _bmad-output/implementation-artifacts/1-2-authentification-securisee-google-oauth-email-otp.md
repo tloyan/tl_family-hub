@@ -81,10 +81,10 @@ so that I can access the application without managing a password.
 
 ### T3: Email Service — Resend + React Email (AC: 2)
 
-- [ ] T3.1: Installer `resend` dans `apps/api`
-- [ ] T3.2: Creer le package `packages/emails/` avec le template React Email `otp-code.tsx` (affiche le code 6 chiffres)
-- [ ] T3.3: Implementer le service d'envoi d'email dans la fonction `sendVerificationOTP` de Better Auth
-- [ ] T3.4: Configurer la variable `RESEND_API_KEY` dans Doppler
+- [x] T3.1: Installer `resend` dans `apps/api`
+- [x] T3.2: Creer le package `packages/emails/` avec le template React Email `otp-code.tsx` (affiche le code 6 chiffres)
+- [x] T3.3: Implementer le service d'envoi d'email dans la fonction `sendVerificationOTP` de Better Auth
+- [x] T3.4: Configurer la variable `RESEND_API_KEY` dans Doppler
 
 ### T4: Client Web — Next.js (AC: 1, 3, 6)
 

@@ -3,6 +3,10 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { emailOTP } from 'better-auth/plugins';
 import { expo } from '@better-auth/expo';
 import type { PrismaClient } from '@family-hub/db';
+import { renderOtpEmail } from '@family-hub/emails';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env['RESEND_API_KEY']);
 
 export function createAuth(prisma: PrismaClient) {
   return betterAuth({
@@ -34,10 +38,14 @@ export function createAuth(prisma: PrismaClient) {
       emailOTP({
         otpLength: 6,
         expiresIn: 600, // 10 minutes
-        // eslint-disable-next-line @typescript-eslint/require-await -- TODO(T3): Replace with Resend + React Email template
-        sendVerificationOTP: async ({ email, otp }) => {
-          // eslint-disable-next-line no-console -- placeholder until T3
-          console.log(`[OTP] ${email}: ${otp}`);
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          const { html, subject } = renderOtpEmail({ otp, type });
+          await resend.emails.send({
+            from: 'Family Hub <noreply@family-hub.com>',
+            to: email,
+            subject,
+            html,
+          });
         },
       }),
       expo(),

@@ -1,0 +1,41 @@
+{
+  "name": "@family-hub/emails",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HTML email templates for Family Hub",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "preview": "tsx scripts/preview.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@family-hub/config-eslint": "workspace:*",
+    "@family-hub/config-ts": "workspace:*",
+    "eslint": "^9.0.0",
+    "tsdown": "^0.20.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

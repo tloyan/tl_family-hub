@@ -15,6 +15,7 @@ export default {
         'mobile',
         'shared',
         'db',
+        'emails',
         'tokens',
         'config-eslint',
         'config-ts',

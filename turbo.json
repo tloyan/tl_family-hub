@@ -16,6 +16,7 @@
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "TRUSTED_ORIGINS",
+        "RESEND_API_KEY",
         "NEXT_PUBLIC_*",
         "EXPO_PUBLIC_*"
       ]
@@ -33,6 +34,7 @@
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "TRUSTED_ORIGINS",
+        "RESEND_API_KEY",
         "NEXT_PUBLIC_*",
         "EXPO_PUBLIC_*"
       ]
