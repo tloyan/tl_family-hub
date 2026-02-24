@@ -98,12 +98,12 @@ so that I can access the application without managing a password.
 
 ### T5: Client Mobile — Expo (AC: 1, 3, 5)
 
-- [ ] T5.1: Installer `better-auth` et `@better-auth/expo` dans `apps/mobile`
-- [ ] T5.2: Creer `apps/mobile/lib/auth-client.ts` avec `createAuthClient` + plugin `expoClient` (SecureStore, deep linking)
-- [ ] T5.3: Completer l'ecran existant `apps/mobile/app/(auth)/sign-in.tsx` (le fichier existe deja comme placeholder depuis la story 1-1)
-- [ ] T5.4: Implementer le formulaire mobile (email input + bouton OAuth Google)
-- [ ] T5.5: Configurer le deep linking pour callback OAuth Google (`app.json` scheme)
-- [ ] T5.6: Creer l'ecran `apps/mobile/app/(auth)/verify-otp.tsx` (6 champs, auto-focus, clavier numerique natif)
+- [x] T5.1: Installer `better-auth` et `@better-auth/expo` dans `apps/mobile`
+- [x] T5.2: Creer `apps/mobile/lib/auth-client.ts` avec `createAuthClient` + plugin `expoClient` (SecureStore, deep linking)
+- [x] T5.3: Completer l'ecran existant `apps/mobile/app/(auth)/sign-in.tsx` (le fichier existe deja comme placeholder depuis la story 1-1)
+- [x] T5.4: Implementer le formulaire mobile (email input + bouton OAuth Google)
+- [x] T5.5: Configurer le deep linking pour callback OAuth Google (`app.json` scheme)
+- [x] T5.6: Creer l'ecran `apps/mobile/app/(auth)/verify-otp.tsx` (6 champs, auto-focus, clavier numerique natif)
 
 ### T6: Variables d'environnement & Secrets (AC: 1, 2, 7)
 
@@ -345,5 +345,19 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **CORS cross-origin :** Le front (`:3000`) et l'API (`:4000`) sont sur des ports differents en dev. Ajout de `app.enableCors()` dans `main.ts` (origin `localhost:3000` en dev, `TRUSTED_ORIGINS` en prod) et ajout de `http://localhost:3000` dans `trustedOrigins` de Better Auth en dev.
 - **ShadCN components ajoutes :** `input`, `label`, `card`, `input-otp`, `separator` + `lucide-react` (dependance de `input-otp`).
 - **Pas de fallback sur `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_GRAPHQL_URL` :** Les URLs API sont fournies par Doppler. Absence = erreur explicite. `PORT` retire de la config Doppler dev pour eviter les conflits (Next.js default `:3000`, NestJS default `:4000`).
+
+#### T5: Client Mobile — Expo
+
+**Ecarts par rapport au spec original :**
+
+- **T5.1 — Dependances supplementaires :** `expo-secure-store`, `expo-web-browser`, `expo-network` (peer dep requise par `@better-auth/expo`).
+- **T5.1 — Metro `unstable_enablePackageExports` :** Requis dans `metro.config.js` pour que Metro resolve les subpath imports de Better Auth (`better-auth/react`, `better-auth/client/plugins`, `@better-auth/expo/client`).
+- **T5.3/T5.4 — Composants UI crees :** `TextInput` (CVA, variantes default/error), `Separator` (horizontal/vertical), `OtpInput` (TextInput transparent overlay + 6 slots visuels pour autofill iOS). Ces composants suivent le pattern existant de `Button`/`Text`.
+- **T5.5 — ATS (App Transport Security) :** Ajout `NSAllowsLocalNetworking: true` dans `app.json` `ios.infoPlist` pour les dev builds natifs. En dev avec Expo Go, `EXPO_PUBLIC_API_URL` doit pointer vers l'IP locale (pas `localhost`) car Expo Go ne resout pas `localhost` pour les requetes HTTP natives.
+- **T5.5 — Google OAuth sur mobile en dev :** Le flow Google OAuth necessite HTTPS pour `expo-web-browser` (`ASWebAuthenticationSession`). En dev local avec Expo Go (HTTP), seul le flow Email OTP fonctionne. Google OAuth mobile sera testable apres deploiement en dev (HTTPS) ou avec un dev build natif.
+- **Apollo Client — `SetContextLink` :** Remplacement de `setContext` (deprecie dans Apollo Client v4) par `new SetContextLink()`. Le cookie auth est injecte via `authClient.getCookie()` (synchrone, pas async).
+- **Auth-gated root redirect :** `app/index.tsx` utilise `useSession()` pour rediriger vers sign-in (pas de session) ou tabs (session active), avec `ActivityIndicator` pendant le chargement.
+- **Web fix — Google OAuth `callbackURL` :** Corrige de `'/'` (relatif a l'API) a `window.location.origin + '/'` (URL absolue du frontend) pour eviter la redirection vers `localhost:4000` apres le callback Google.
+- **Email OTP template :** Suppression des espaces entre les chiffres du code (`spacedOtp` → `otp`) pour ameliorer la detection iOS autofill. Le spacing visuel est gere par CSS `letter-spacing`.
 
 ### File List

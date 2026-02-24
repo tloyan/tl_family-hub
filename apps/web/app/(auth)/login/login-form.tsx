@@ -21,7 +21,7 @@ export function LoginForm() {
     setError('');
     setGoogleLoading(true);
     try {
-      await signIn.social({ provider: 'google', callbackURL: '/' });
+      await signIn.social({ provider: 'google', callbackURL: window.location.origin + '/' });
     } catch {
       setError('Une erreur est survenue avec Google. Veuillez réessayer.');
       setGoogleLoading(false);

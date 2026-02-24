@@ -27,8 +27,6 @@ const COPY: Record<OtpType, { subject: string; title: string }> = {
 
 export function renderOtpEmail({ otp, type }: OtpEmailParams): RenderedEmail {
   const { subject, title } = COPY[type];
-  const spacedOtp = otp.split('').join(' ');
-
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -56,7 +54,7 @@ export function renderOtpEmail({ otp, type }: OtpEmailParams): RenderedEmail {
               </p>
               <!-- OTP Code -->
               <div style="background-color:#f4f4f5;border-radius:8px;padding:24px;text-align:center;margin:0 0 32px;">
-                <span style="font-size:36px;font-weight:700;letter-spacing:0.3em;color:#18181b;font-family:'Courier New',Courier,monospace;">${spacedOtp}</span>
+                <span style="font-size:36px;font-weight:700;letter-spacing:0.5em;color:#18181b;font-family:'Courier New',Courier,monospace;">${otp}</span>
               </div>
               <p style="margin:0;font-size:13px;line-height:1.5;color:#a1a1aa;">
                 Ce code expire dans 10 minutes. Si vous n'avez pas fait cette demande, vous pouvez ignorer cet email.

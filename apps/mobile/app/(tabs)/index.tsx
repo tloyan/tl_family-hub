@@ -1,8 +1,17 @@
 import { ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { signOut } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace('/(auth)/sign-in');
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -11,6 +20,9 @@ export default function HomeScreen() {
       <View className="items-center gap-2">
         <Text className="text-3xl font-bold tracking-tight">Family Hub</Text>
         <Text className="text-muted-foreground">Mobile app is running.</Text>
+        <Button variant="destructive" onPress={() => void handleSignOut()}>
+          <Text>Se deconnecter</Text>
+        </Button>
       </View>
 
       {/* Button variants */}
