@@ -107,10 +107,10 @@ so that I can access the application without managing a password.
 
 ### T6: Variables d'environnement & Secrets (AC: 1, 2, 7)
 
-- [ ] T6.1: Ajouter dans `.env.example` : `RESEND_API_KEY`, `EXPO_PUBLIC_API_URL`, `NEXT_PUBLIC_API_URL`
-- [ ] T6.2: Configurer les secrets dans Doppler (dev, staging, production)
-- [ ] T6.3: Creer l'OAuth app sur Google Cloud Console (Client IDs pour web, iOS, Android)
-- [ ] T6.4: Configurer les redirect URIs par plateforme (web, iOS, Android)
+- [x] T6.1: Ajouter dans `.env.example` : `RESEND_API_KEY`, `EXPO_PUBLIC_API_URL`, `NEXT_PUBLIC_API_URL`
+- [x] T6.2: Configurer les secrets dans Doppler (dev, staging, production)
+- [x] T6.3: Creer l'OAuth app sur Google Cloud Console (Client IDs pour web, iOS, Android)
+- [ ] T6.4: Configurer les redirect URIs par plateforme (web, iOS, Android) — **bloque : bundle IDs iOS/Android non disponibles**
 
 ### T7: Tests (AC: tous)
 
@@ -266,9 +266,9 @@ await resend.emails.send({
 | `BETTER_AUTH_URL` | URL base du serveur auth | Oui |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Oui |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Oui |
-| `RESEND_API_KEY` | Cle API Resend pour emails | **Non — a ajouter** |
-| `EXPO_PUBLIC_API_URL` | URL API pour le client mobile | **Non — a ajouter** |
-| `NEXT_PUBLIC_API_URL` | URL API pour le client web | **Non — a ajouter** |
+| `RESEND_API_KEY` | Cle API Resend pour emails | Oui |
+| `EXPO_PUBLIC_API_URL` | URL API pour le client mobile | Oui |
+| `NEXT_PUBLIC_API_URL` | URL API pour le client web | Oui |
 | `DATABASE_URL` | Connexion PostgreSQL Prisma | Oui |
 
 ### Compatibilite avec Story 1-1
@@ -359,5 +359,14 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **Auth-gated root redirect :** `app/index.tsx` utilise `useSession()` pour rediriger vers sign-in (pas de session) ou tabs (session active), avec `ActivityIndicator` pendant le chargement.
 - **Web fix — Google OAuth `callbackURL` :** Corrige de `'/'` (relatif a l'API) a `window.location.origin + '/'` (URL absolue du frontend) pour eviter la redirection vers `localhost:4000` apres le callback Google.
 - **Email OTP template :** Suppression des espaces entre les chiffres du code (`spacedOtp` → `otp`) pour ameliorer la detection iOS autofill. Le spacing visuel est gere par CSS `letter-spacing`.
+
+#### T6: Variables d'environnement & Secrets
+
+**Ecarts par rapport au spec original :**
+
+- **T6.1 — Deja fait dans les tasks precedentes :** Les variables `RESEND_API_KEY`, `EXPO_PUBLIC_API_URL`, `NEXT_PUBLIC_API_URL` avaient deja ete ajoutees a `.env.example` et `turbo.json` lors des tasks T3, T4 et T5. Variables supplementaires egalement presentes : `TRUSTED_ORIGINS`, `NEXT_PUBLIC_GRAPHQL_URL`, `EXPO_PUBLIC_GRAPHQL_URL`.
+- **T6.2 — Doppler deja configure :** Tous les secrets sont en place dans Doppler pour les environnements dev, staging et production.
+- **T6.3 — Google Cloud Console :** OAuth app creee avec Client IDs pour web. Les Client IDs iOS et Android seront ajoutes quand les bundle IDs seront disponibles.
+- **T6.4 — Bloque :** Les redirect URIs par plateforme (iOS, Android) ne peuvent pas etre configurees sans les bundle IDs. Sera complete dans une story ulterieure ou quand les builds natifs seront en place.
 
 ### File List
