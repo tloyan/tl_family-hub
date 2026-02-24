@@ -1,7 +1,9 @@
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 
 const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql',
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- provided by Doppler, absence = visible runtime error
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
+  credentials: 'include',
 });
 
 export const apolloClient = new ApolloClient({

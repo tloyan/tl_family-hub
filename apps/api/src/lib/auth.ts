@@ -33,7 +33,11 @@ export function createAuth(prisma: PrismaClient) {
     advanced: {
       useSecureCookies: process.env['NODE_ENV'] === 'production',
     },
-    trustedOrigins: ['familyhub://', ...(process.env['TRUSTED_ORIGINS']?.split(',') ?? [])],
+    trustedOrigins: [
+      'familyhub://',
+      ...(process.env['TRUSTED_ORIGINS']?.split(',') ?? []),
+      ...(process.env['NODE_ENV'] !== 'production' ? ['http://localhost:3000'] : []),
+    ],
     plugins: [
       emailOTP({
         otpLength: 6,
@@ -41,7 +45,7 @@ export function createAuth(prisma: PrismaClient) {
         sendVerificationOTP: async ({ email, otp, type }) => {
           const { html, subject } = renderOtpEmail({ otp, type });
           await resend.emails.send({
-            from: 'Family Hub <noreply@family-hub.com>',
+            from: `Family Hub <${process.env['EMAIL_FROM']}>`,
             to: email,
             subject,
             html,

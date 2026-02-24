@@ -11,6 +11,14 @@ async function bootstrap() {
   });
   app.useLogger(app.get(Logger));
 
+  app.enableCors({
+    origin:
+      process.env['NODE_ENV'] === 'production'
+        ? (process.env['TRUSTED_ORIGINS']?.split(',') ?? [])
+        : ['http://localhost:3000'],
+    credentials: true,
+  });
+
   // Re-enable body parsing for all routes except /api/auth/*
   // Better Auth's toNodeHandler needs the raw request stream unparsed
   const jsonParser = express.json();

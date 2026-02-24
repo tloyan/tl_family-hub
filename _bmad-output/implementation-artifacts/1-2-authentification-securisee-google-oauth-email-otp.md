@@ -88,13 +88,13 @@ so that I can access the application without managing a password.
 
 ### T4: Client Web — Next.js (AC: 1, 3, 6)
 
-- [ ] T4.1: Installer `better-auth` (client) dans `apps/web`
-- [ ] T4.2: Creer `apps/web/lib/auth-client.ts` avec `createAuthClient` + plugin `nextCookies`
-- [ ] T4.3: Creer les pages auth : `apps/web/app/(auth)/login/page.tsx`, `apps/web/app/(auth)/verify-otp/page.tsx`
-- [ ] T4.4: Implementer le formulaire de connexion (email input + bouton OAuth Google)
-- [ ] T4.5: Implementer l'ecran de saisie OTP (6 champs individuels avec auto-focus, timer de renvoi 60s)
-- [ ] T4.6: Ajouter le middleware Next.js pour protection des routes authentifiees
-- [ ] T4.7: Configurer Apollo Client avec `credentials: 'include'` pour transmettre automatiquement les cookies de session Better Auth (pas de header Authorization sur web — auth par cookies)
+- [x] T4.1: Installer `better-auth` (client) dans `apps/web`
+- [x] T4.2: Creer `apps/web/lib/auth-client.ts` avec `createAuthClient` + plugin `nextCookies`
+- [x] T4.3: Creer les pages auth : `apps/web/app/(auth)/login/page.tsx`, `apps/web/app/(auth)/verify-otp/page.tsx`
+- [x] T4.4: Implementer le formulaire de connexion (email input + bouton OAuth Google)
+- [x] T4.5: Implementer l'ecran de saisie OTP (6 champs individuels avec auto-focus, timer de renvoi 60s)
+- [x] T4.6: Ajouter le proxy Next.js 16 (`proxy.ts`) pour protection des routes authentifiees
+- [x] T4.7: Configurer Apollo Client avec `credentials: 'include'` pour transmettre automatiquement les cookies de session Better Auth (pas de header Authorization sur web — auth par cookies)
 
 ### T5: Client Mobile — Expo (AC: 1, 3, 5)
 
@@ -336,5 +336,14 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **`getRequestFromContext` helper :** La logique d'extraction de `Request` depuis un `ExecutionContext` NestJS (HTTP ou GraphQL) etait dupliquee entre `auth.guard.ts` et `current-user.decorator.ts`. Factorisee dans `common/utils/get-request.ts`.
 - **Imports statiques :** Les imports dynamiques `await import()` et `onModuleInit()` ont ete remplaces par des imports statiques et une initialisation dans les constructeurs. Node.js 25 supporte `require()` de modules ESM synchrones nativement.
 - **Variables d'environnement :** `RESEND_API_KEY` et `SENDER_EMAIL` retires de `.env.example` et `turbo.json` (seront re-ajoutes dans T3). `TRUSTED_ORIGINS` ajoute.
+
+#### T4: Client Web — Next.js
+
+**Ecarts par rapport au spec original :**
+
+- **T4.6 — `proxy.ts` au lieu de `middleware.ts` :** Next.js 16 remplace `middleware.ts` (Edge runtime) par `proxy.ts` (Node.js runtime). Le proxy verifie la presence du cookie de session (`better-auth.session_token` ou `__Secure-better-auth.session_token`) sans appel API — simple redirection basee sur la presence du cookie.
+- **CORS cross-origin :** Le front (`:3000`) et l'API (`:4000`) sont sur des ports differents en dev. Ajout de `app.enableCors()` dans `main.ts` (origin `localhost:3000` en dev, `TRUSTED_ORIGINS` en prod) et ajout de `http://localhost:3000` dans `trustedOrigins` de Better Auth en dev.
+- **ShadCN components ajoutes :** `input`, `label`, `card`, `input-otp`, `separator` + `lucide-react` (dependance de `input-otp`).
+- **Pas de fallback sur `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_GRAPHQL_URL` :** Les URLs API sont fournies par Doppler. Absence = erreur explicite. `PORT` retire de la config Doppler dev pour eviter les conflits (Next.js default `:3000`, NestJS default `:4000`).
 
 ### File List
