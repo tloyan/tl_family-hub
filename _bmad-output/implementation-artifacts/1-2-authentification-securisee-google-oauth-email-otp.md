@@ -70,7 +70,7 @@ so that I can access the application without managing a password.
 - [x] T1.4: Ajouter le plugin Email OTP avec fonction `sendVerificationOTP` placeholder `console.log` (code 6 chiffres, expiration 10 min) — Resend differe a T3
 - [x] T1.5: Configurer les sessions (expiration 30 jours, refresh token rotation, httpOnly cookies)
 - [x] T1.6: Configurer le rate limiting via Better Auth built-in `rateLimit` (5 login/15min, 3 OTP/heure, 5 verifications OTP/15min) — les routes auth bypasses NestJS, donc `@nestjs/throttler` ne s'applique pas
-- [x] T1.7: Exposer les routes Better Auth via un catch-all handler NestJS (`/api/auth/*path` — syntaxe Express v5)
+- [x] T1.7: Exposer les routes Better Auth via `@thallesp/nestjs-better-auth` `AuthModule.forRootAsync()` (remplace le catch-all handler manuel)
 - [x] T1.8: Configurer `accountLinking.enabled: true` dans Better Auth pour merger automatiquement les comptes par email verifie (preparation pour Apple OAuth futur)
 
 ### T2: Schema Prisma Auth (AC: 1, 2, 3, 4)
@@ -118,14 +118,15 @@ so that I can access the application without managing a password.
 - [ ] T7.2: Tests d'integration (Supertest) — flux OAuth mock, email OTP complet (envoi + verification), account linking
 - [ ] T7.3: Tests e2e web (Playwright) — login Google, login email OTP, logout
 - [ ] T7.4: Tests de securite — cookies httpOnly, session expiry, rate limiting enforcement
-- [ ] T7.5: Ajouter les variables auth au workflow CI (GitHub Secrets)
+- [x] T7.5: Ajouter les variables auth au workflow CI (GitHub Secrets)
 
 ## Dev Notes
 
 ### Architecture & Patterns obligatoires
 
 - **Better Auth** (v1.4.x) gere OAuth, Email OTP, sessions et Prisma adapter nativement
-- **Routes REST Better Auth** exposees via catch-all controller NestJS (`/api/auth/*path`). Les resolvers GraphQL NestJS sont utilises pour les queries/mutations metier, pas pour l'auth elle-meme
+- **`@thallesp/nestjs-better-auth`** (v2.4.0) gere l'integration NestJS : controller interne, global `AuthGuard`, body parser middleware, decorateurs `@AllowAnonymous()`, `@Session()`, `@OptionalAuth()`
+- **Routes REST Better Auth** exposees automatiquement par la lib (`/api/auth/*`). Les resolvers GraphQL NestJS sont utilises pour les queries/mutations metier, pas pour l'auth elle-meme
 - **Dot-notation** pour tous les fichiers : `auth.module.ts`, `auth.service.ts`, `auth.guard.ts`, `auth.spec.ts`
 - **Custom exceptions uniquement** : Jamais `throw new Error()` — utiliser les exceptions NestJS custom avec codes `AUTH_*`
 - **UUID v7** pour tous les IDs (chronologiquement ordonnables)
@@ -290,11 +291,11 @@ await resend.emails.send({
 
 ### Project Structure Notes
 
-- `apps/api/src/modules/auth/` — Module NestJS auth (nouveau)
-- `apps/api/src/lib/auth.ts` — Instance Better Auth (nouveau)
-- `apps/api/src/common/guards/auth.guard.ts` — Guard de base pour routes authentifiees (nouveau — utilise par les stories suivantes)
+- `apps/api/src/lib/auth.ts` — Factory `createAuth()` Better Auth (nouveau)
+- `apps/api/src/app.module.ts` — Wiring `AuthModule.forRootAsync()` via `@thallesp/nestjs-better-auth`
+- `apps/api/src/modules/health/` — `@AllowAnonymous()` sur controller et resolver
 - `packages/db/prisma/schema/auth.prisma` — Schema Prisma auth (nouveau)
-- `packages/emails/` — Package templates email (nouveau)
+- `packages/emails/` — Package templates email (nouveau, avec tests Vitest)
 - `apps/web/app/(auth)/login/page.tsx` — Page login web (nouveau)
 - `apps/web/app/(auth)/verify-otp/page.tsx` — Page verification OTP web (nouveau)
 - `apps/web/lib/auth-client.ts` — Client auth web (nouveau)
@@ -368,5 +369,35 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **T6.2 — Doppler deja configure :** Tous les secrets sont en place dans Doppler pour les environnements dev, staging et production.
 - **T6.3 — Google Cloud Console :** OAuth app creee avec Client IDs pour web. Les Client IDs iOS et Android seront ajoutes quand les bundle IDs seront disponibles.
 - **T6.4 — Bloque :** Les redirect URIs par plateforme (iOS, Android) ne peuvent pas etre configurees sans les bundle IDs. Sera complete dans une story ulterieure ou quand les builds natifs seront en place.
+
+#### T1.7: Migration `@thallesp/nestjs-better-auth`
+
+- **Remplacement du glue code manuel** par `@thallesp/nestjs-better-auth` v2.4.0. Suppression de 6 fichiers source : `AuthModule`, `AuthService`, `AuthController` (dans `modules/auth/`), `BetterAuthGuard`, `getRequestFromContext`, `CurrentUser` decorator (dans `common/`). La lib fournit tout via `AuthModule.forRootAsync()`, un global guard, `@AllowAnonymous()`, `@Session()`, et un body parser middleware automatique.
+- **`main.ts` simplifie** : suppression du middleware body parser custom (18 lignes). La lib gere le skip body parsing sur les routes auth automatiquement.
+- **`@AllowAnonymous()`** ajoute sur `HealthController` et `HealthResolver` (le global guard protege toutes les routes par defaut).
+
+#### T7: Tests — non pertinents a ce stade, differes
+
+**Constat :** Apres la migration vers `@thallesp/nestjs-better-auth`, notre code auth custom se resume a `src/lib/auth.ts` (factory config) et 5 lignes de wiring dans `app.module.ts`. Il n'y a pas de logique metier a tester unitairement.
+
+**T7.1 a T7.4 — non implementes, voici pourquoi :**
+
+- Les tests implementes initialement (`email-otp-flow`, `session-management`, `security`, `account-linking`) utilisaient `auth.api.*` (l'API interne de Better Auth) et testaient le comportement de la librairie, pas notre code applicatif.
+- Les tests de rate limiting etaient des **faux positifs** : un fallback `?? 429` dans le `catch` faisait toujours passer l'assertion. Le rate limiter de Better Auth ne se declenche ni via `auth.api.*` ni via HTTP/supertest en environnement de test.
+- Les tests de cookie security, session expiry, et OTP flow verifient des garanties de Better Auth documentees dans leur doc — pas de valeur ajoutee a les retester.
+- Le test d'account linking ne testait pas l'account linking (juste que `createTestAuth()` ne throw pas).
+- `render-otp-email.spec.ts` a ete deplace dans `packages/emails/` (c'est son package).
+
+**Quand les implementer :**
+
+- **Story 1.3+ (routes protegees)** : quand on aura des resolvers/controllers metier (households, members), on testera le vrai scenario d'integration : user authentifie → acces OK, user non auth → 401, `@Session()` retourne le bon user. C'est la que les tests auth ont de la valeur.
+- **Playwright (T7.3)** : quand le setup Playwright sera ajoute au projet.
+- **Rate limiting** : necessite investigation sur pourquoi le rate limiter Better Auth ne se declenche pas en test, ou test manuel contre un serveur reel.
+
+**Ce qui est en place :**
+
+- `apps/api/test/app.e2e-spec.ts` — verifie que le vrai `AppModule` bootstrap correctement (wiring NestJS + auth + health + GraphQL)
+- `packages/emails/src/templates/otp-code.spec.ts` — 11 tests unitaires du template email OTP
+- `ci.yml` — variables auth ajoutees pour la CI (T7.5)
 
 ### File List

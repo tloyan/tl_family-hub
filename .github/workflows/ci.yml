@@ -36,6 +36,11 @@ jobs:
       REDIS_URL: redis://localhost:6379
       BETTER_AUTH_SECRET: ci-dummy-secret-for-build-only-32chars
       BETTER_AUTH_URL: http://localhost:4000
+      GOOGLE_CLIENT_ID: ci-dummy-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-dummy-google-client-secret
+      RESEND_API_KEY: re_ci_dummy_key
+      EMAIL_FROM: ci-test@family-hub.test
+      TRUSTED_ORIGINS: http://localhost:3000
       NEXT_PUBLIC_GRAPHQL_URL: http://localhost:4000/graphql
 
     steps:
