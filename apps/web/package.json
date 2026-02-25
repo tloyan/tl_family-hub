@@ -30,7 +30,7 @@
   "devDependencies": {
     "@family-hub/config-eslint": "workspace:*",
     "@family-hub/config-ts": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
