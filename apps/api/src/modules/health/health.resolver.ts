@@ -1,6 +1,8 @@
 import { Resolver, Query } from '@nestjs/graphql';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { HealthStatus } from './health.model';
 
+@AllowAnonymous()
 @Resolver(() => HealthStatus)
 export class HealthResolver {
   @Query(() => HealthStatus)
