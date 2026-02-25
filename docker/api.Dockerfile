@@ -54,6 +54,10 @@ COPY --from=builder --chown=nestjs:nestjs /app/packages/db/dist ./packages/db/di
 COPY --from=builder --chown=nestjs:nestjs /app/packages/db/package.json ./packages/db/package.json
 COPY --from=builder --chown=nestjs:nestjs /app/packages/db/prisma ./packages/db/prisma
 
+# Copy emails package
+COPY --from=builder --chown=nestjs:nestjs /app/packages/emails/dist ./packages/emails/dist
+COPY --from=builder --chown=nestjs:nestjs /app/packages/emails/package.json ./packages/emails/package.json
+
 # Copy shared package
 COPY --from=builder --chown=nestjs:nestjs /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder --chown=nestjs:nestjs /app/packages/shared/package.json ./packages/shared/package.json
