@@ -42,7 +42,7 @@
       ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint", "^build"]
     },
     "@family-hub/db#lint": {
       "dependsOn": ["build"]
