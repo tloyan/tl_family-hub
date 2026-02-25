@@ -39,6 +39,9 @@ coverage/
 *.tmp
 *.temp
 
+# Email previews
+.preview/
+
 # Turborepo
 .turbo/
 

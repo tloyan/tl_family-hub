@@ -42,8 +42,8 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # ── Epic 1: Fondation, Authentification & Foyer familial ──
   epic-1: in-progress
-  1-1-initialisation-monorepo-ci-cd-et-deploiement: in-progress
-  1-2-authentification-securisee-google-oauth-magic-link: backlog
+  1-1-initialisation-monorepo-ci-cd-et-deploiement: done
+  1-2-authentification-securisee-google-oauth-email-otp: ready-for-dev
   1-3-creation-de-foyer-et-modele-de-donnees-familial: backlog
   1-4-invitation-de-membres-et-rejoindre-un-foyer: backlog
   1-5-roles-permissions-et-gestion-des-membres: backlog

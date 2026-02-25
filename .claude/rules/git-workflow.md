@@ -18,7 +18,7 @@
 
 - Format : `type(scope): description` — anglais, lowercase, imperatif, pas de point final
 - Types : `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`, `style`
-- Scopes = packages/apps du monorepo : `api`, `web`, `mobile`, `shared`, `db`, `tokens`, `config-eslint`, `config-ts`
+- Scopes = packages/apps du monorepo : `api`, `web`, `mobile`, `shared`, `db`, `emails`, `tokens`, `config-eslint`, `config-ts`
 - Scope omis si le changement touche la racine ou plusieurs packages
 - Body optionnel, separe par une ligne vide, explique le "pourquoi"
 - Breaking changes : `type(scope)!: description` ou footer `BREAKING CHANGE: explication`

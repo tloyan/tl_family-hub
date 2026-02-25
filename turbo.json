@@ -13,16 +13,36 @@
         "PORT",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
-        "NEXT_PUBLIC_*"
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "TRUSTED_ORIGINS",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*"
       ]
     },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "DATABASE_URL",
+        "REDIS_URL",
+        "PORT",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "TRUSTED_ORIGINS",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint", "^build"]
     },
     "@family-hub/db#lint": {
       "dependsOn": ["build"]
@@ -39,12 +59,30 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["DATABASE_URL"]
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "TRUSTED_ORIGINS"
+      ]
     },
     "test:coverage": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["DATABASE_URL"]
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "TRUSTED_ORIGINS"
+      ]
     },
     "db:generate": {
       "cache": false
