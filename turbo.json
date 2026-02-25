@@ -9,6 +9,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**", "src/generated/**"],
       "env": [
         "DATABASE_URL",
+        "DIRECT_DATABASE_URL",
         "REDIS_URL",
         "PORT",
         "BETTER_AUTH_SECRET",
