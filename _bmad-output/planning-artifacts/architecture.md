@@ -124,10 +124,13 @@ Aucun starter existant ne correspond a la combinaison exacte des preferences tec
 | `shared` | Types, constantes, validations, enums | Tous |
 | `db` | Schema Prisma, migrations, seed | api, scripts |
 | `tokens` | Design tokens (couleurs, typo, spacing) + generation configs Tailwind | web, mobile |
+| `emails` | Templates email (OTP, invitations) + rendu HTML | api |
 | `config-eslint` | Config ESLint partagee | Tous |
 | `config-ts` | Config TypeScript partagee | Tous |
 
 > **Note post-Story-1.1 :** Les packages `auth`, `ui`, `ui-native`, `api-client` et `config-tailwind` initialement prevus ont ete reportes. L'auth vit dans `apps/api/modules/auth/`, les composants UI sont directement dans chaque app (ShadCN UI dans web, NativeWind dans mobile), et `packages/tokens/` genere les configurations Tailwind. Ces packages seront crees si un besoin de partage reel emerge.
+
+> **Note post-Story-1.2 :** Le package `packages/emails/` a ete cree pour les templates email (OTP). L'auth est geree par `@thallesp/nestjs-better-auth` (module NestJS) + `apps/api/src/lib/auth.ts` (factory Better Auth), pas par un module custom dans `modules/auth/`. Les routes auth sont REST (`/api/auth/*`), le domaine metier utilise GraphQL. Les emails OTP auth sont envoyes directement via Resend dans le callback Better Auth (pas via notification/BullMQ).
 
 ### Technology Decisions
 
@@ -140,7 +143,7 @@ Aucun starter existant ne correspond a la combinaison exacte des preferences tec
 | Backend | NestJS | Expertise Thomas, architecture modulaire, support natif microservices/event-driven/CQRS/WebSocket |
 | Base de donnees | PostgreSQL | Robuste, performant, extensible |
 | ORM | Prisma | Type safety complete, ecosystem NestJS, $queryRaw pour requetes complexes, Prisma Studio |
-| Auth | Better Auth | Open source, integration NestJS, adapter Prisma natif |
+| Auth | Better Auth + `@thallesp/nestjs-better-auth` | Open source, integration NestJS via lib dediee (global guard, decorateurs `@Session()`, `@AllowAnonymous()`), adapter Prisma natif |
 | UI Web | ShadCN UI + Tailwind CSS | Expertise Thomas, zero lock-in, esthetique sobre |
 | UI Mobile | React Native Reusables (ShadCN pour RN) + NativeWind | Coherence ShadCN cross-platform, meme philosophie copy-paste |
 | Icones | Lucide Icons | Inclus ecosysteme ShadCN |
@@ -180,7 +183,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 - API style : GraphQL code-first
 - Modele de permissions : RBAC + ABAC + ReBAC (PBAC hybride)
 - Isolation des donnees par foyer : Prisma Client Extension automatique
-- Authentification : Better Auth (Social OAuth + Magic Link/OTP)
+- Authentification : Better Auth + `@thallesp/nestjs-better-auth` (Social OAuth Google + Email OTP)
 - Infrastructure : Supabase + Railway + Vercel + Upstash
 
 **Decisions importantes (faconnent l'architecture) :**
@@ -234,6 +237,8 @@ npx create-turbo@latest family-home --package-manager pnpm
 | Cache serveur | Redis via Upstash (triple usage : cache + pub/sub + sessions) | Un seul service, cout maitrise |
 | Kafka | Differe post-MVP | Redis Pub/Sub suffisant au lancement, migration ~1 jour documentes, Upstash Kafka serverless identifie (~1-2$/mois) |
 
+> **Note post-Story-1.2 :** L'authentification est geree en REST (`/api/auth/*`) par Better Auth via `toNodeHandler`. Le GraphQL sert exclusivement le domaine metier (queries, mutations, subscriptions). Les deux protocoles coexistent sur le meme serveur NestJS.
+
 **Workflow code-first :**
 
 ```
@@ -264,13 +269,15 @@ npx create-turbo@latest family-home --package-manager pnpm
 | Modele de permissions | RBAC + ABAC + ReBAC = **PBAC hybride** | Roles (4 roles) + attributs contextuels (age, temps, etat) + relations (cercles de visibilite) |
 | Granularite permissions | **Instance-level** (par membre, pas par role) | Chaque enfant a sa propre fiche de permissions modifiable individuellement par un parent |
 | Permissions enfants | Niveaux predefinis (Observer/Participant/Autonome) + overrides individuels par membre | Le niveau sert de preset, les overrides permettent du cas par cas. Table `MemberPermission(memberId, level, overrides, grantedBy)` |
-| Autorisation NestJS | Guards NestJS + decorateurs custom (roles, permissions) | Code-first coherent : autorisations definies dans le code TypeScript via @UseGuards et decorateurs custom |
+| Autorisation NestJS | `@thallesp/nestjs-better-auth` (global auth guard + `@AllowAnonymous()` + `@Session()` + `@OptionalAuth()`) + guards custom metier (roles, permissions) a implementer | Auth guard fourni par la lib, guards metier (role, household, parental-consent) a creer dans les stories suivantes |
 | Isolation foyer | Prisma Client Extension + `householdId` auto-injecte dans chaque requete | Zero risque d'oubli, bypass explicite `bypassHouseholdFilter()` pour les rares cas cross-foyer |
 | Prestataires | Compte Better Auth avec permissions limitees + date d'expiration, meme flux auth | Tracabilite, pas de token custom |
 | Chiffrement transit | TLS 1.3 (reverse proxy Cloudflare/Railway) | NFR7 |
 | Chiffrement repos | AES-256 natif Supabase | NFR8 |
 | Donnees sensibles | Chiffrement applicatif avec cle par foyer | Protection supplementaire pour notes medicales, etc. |
-| Rate limiting | `@nestjs/throttler` par route/resolver | Protection brute force sur auth |
+| Rate limiting | Better Auth built-in `rateLimit` (routes auth REST) + `@nestjs/throttler` (resolvers GraphQL) | Les routes auth bypasses le pipeline NestJS — `@nestjs/throttler` ne s'applique pas. Rate limits auth : 5 login/15min, 3 OTP/h, 5 verify/15min |
+| Body parsing | `bodyParser: false` dans `main.ts` | Better Auth gere le parsing de ses routes REST via middleware `@thallesp/nestjs-better-auth` |
+| CORS | Config explicite `main.ts` | `http://localhost:3000` en dev, `TRUSTED_ORIGINS` en prod, `credentials: true` pour cookies |
 | DDoS / WAF | Cloudflare (free tier) devant Railway | Protection standard |
 
 ### Frontend Architecture
@@ -280,6 +287,7 @@ npx create-turbo@latest family-home --package-manager pnpm
 | State management | Apollo Client (etat serveur) + Zustand (etat client local) | Apollo gere tout ce qui vient du serveur, Zustand gere theme temporel, mode kiosk, wizard onboarding, preferences UI. Zustand est ~1KB, cross-platform. |
 | Navigation mobile | Expo Router | File-based routing, deep linking natif, layouts imbriques |
 | Navigation web | Next.js App Router | RSC, layouts, SSR/SSG pages publiques |
+| Route protection web | `proxy.ts` (Next.js 16) | Remplace `middleware.ts` (Edge Runtime). Verifie le cookie de session Better Auth, redirige non-auth vers `/login`. Node.js runtime. |
 | Offline mobile | **Complet** — `apollo3-cache-persist` + queue de mutations locale + OCC | Besoin reel : famille en mobilite, enfants qui valident, zones de mauvais reseau |
 | Offline web | **Lecture seule** — `apollo3-cache-persist` | Quasi gratuit (une ligne de config Apollo), affiche les dernieres donnees en cache si perte de connexion |
 | Resolution conflits | Last-Write-Wins par defaut + notification au user si conflit de version OCC | Deterministe, simple, le serveur rejette → client affiche le conflit |
@@ -451,8 +459,10 @@ npx create-turbo@latest family-home --package-manager pnpm
 
 ```
 apps/api/src/
+├── lib/
+│   └── auth.ts                    # Factory Better Auth (config, plugins, rate limits)
 ├── modules/
-│   ├── ritual/
+│   ├── ritual/                    # (exemple complet — meme structure pour household, member, etc.)
 │   │   ├── ritual.module.ts
 │   │   ├── ritual.model.ts          # @ObjectType() — types GraphQL retournés
 │   │   ├── ritual.dto.ts            # @InputType() — inputs GraphQL reçus
@@ -472,40 +482,43 @@ apps/api/src/
 │   │       ├── ritual.service.spec.ts
 │   │       └── ritual.resolver.spec.ts
 │   ├── household/
-│   └── auth/
+│   ├── auth/                      # Vide — auth fournie par @thallesp/nestjs-better-auth
+│   ├── health/                    # Health check (controller REST + resolver GraphQL)
+│   └── prisma/                    # PrismaService (driver adapter PrismaPg)
 ├── common/
-│   ├── guards/
-│   ├── decorators/
-│   └── filters/
+│   ├── guards/                    # Planifie : role.guard.ts, household.guard.ts, parental-consent.guard.ts
+│   ├── decorators/                # Planifie : roles.decorator.ts, current-household.decorator.ts
+│   └── filters/                   # Planifie : graphql-exception.filter.ts
 └── main.ts
 ```
 
 **Organisation features frontend (web + mobile) :**
 
 ```
-apps/web/src/
-├── app/                        # Next.js App Router (routes)
+apps/web/
+├── app/                           # Next.js App Router (routes)
 │   ├── (auth)/
 │   │   ├── login/
+│   │   │   ├── page.tsx
+│   │   │   └── login-form.tsx     # Client component (formulaire)
+│   │   ├── verify-otp/
+│   │   │   ├── page.tsx
+│   │   │   └── verify-otp-form.tsx
 │   │   └── onboarding/
 │   ├── (app)/
+│   │   ├── layout.tsx             # Shell avec sidebar
 │   │   ├── dashboard/
 │   │   └── rituals/
 │   └── layout.tsx
-├── features/                   # Logique metier par domaine
-│   ├── ritual/
-│   │   ├── ritual.card.tsx
-│   │   ├── ritual.form.tsx
-│   │   ├── ritual.list.tsx
-│   │   ├── ritual.hooks.ts
-│   │   └── __tests__/
-│   │       └── ritual.card.spec.tsx
-│   ├── household/
-│   └── auth/
-├── components/                 # Composants UI generiques (pas metier)
-│   ├── layout/
-│   └── common/
-└── lib/                        # Utils, config, providers
+├── features/                      # Logique metier par domaine
+│   └── ...
+├── components/                    # Composants UI generiques + ShadCN
+│   └── ui/                        # Composants ShadCN (card, input, input-otp, etc.)
+├── lib/
+│   ├── apollo-client.ts
+│   ├── auth-client.ts             # Better Auth client (nextCookies plugin)
+│   └── utils.ts
+└── proxy.ts                       # Route protection (Next.js 16, remplace middleware.ts)
 ```
 
 **Tests — emplacement :**
@@ -659,13 +672,13 @@ Format structure JSON via `pino` (NestJS) → Grafana Loki.
 | Rituels & Routines (FR10-18) | `ritual/` | CQRS actif — commands, queries, events. Moteur de recurrence, moments, micro-rituels |
 | Vue & Interface Quotidienne (FR19-23) | Frontend `features/` | Pas de module backend dedie, le Home Hub consomme les queries GraphQL existantes |
 | IA Conversationnelle (FR24-29) | `ai/` | Integration LLM, tool-calling, guardrails, filtrage mineurs |
-| Permissions & Securite (FR30-35) | `auth/` + `common/` | Auth (Better Auth), guards, decorateurs, permissions enfants |
+| Permissions & Securite (FR30-35) | `@thallesp/nestjs-better-auth` + `lib/auth.ts` + `common/` (planifie) | Auth fournie par lib externe + factory config. Guards custom (role, household, parental-consent) planifies story 1.3+ |
 | Notifications (FR36-40) | `notification/` | Push (Expo Notifications), preferences, groupement par moment, BullMQ jobs |
 | Donnees & Conformite (FR41-44) + Droit a l'oubli (FR52-54) | `compliance/` | Export donnees, pipeline RGPD, suppression/anonymisation |
 | Offline & Sync (FR45-48) | Frontend Apollo Client | Gere par Apollo Cache persist + queue mutations + OCC Prisma |
 | Admin & Ops (FR49-51) | `admin/` | Dashboard metriques, health checks |
 
-**8 modules NestJS** : `household`, `member`, `ritual`, `ai`, `auth`, `notification`, `compliance`, `admin`.
+**7 modules NestJS metier** : `household`, `member`, `ritual`, `ai`, `notification`, `compliance`, `admin`. **Modules utilitaires** : `prisma`, `health`. **Auth** : fournie par `@thallesp/nestjs-better-auth` (pas de module custom).
 
 ### Complete Project Directory Structure
 
@@ -689,6 +702,8 @@ family-hub/
 │   │   │   ├── main.ts
 │   │   │   ├── app.module.ts
 │   │   │   ├── schema.gql            # Auto-generated by NestJS code-first (do not edit)
+│   │   │   ├── lib/
+│   │   │   │   └── auth.ts                # Factory Better Auth (config, providers, plugins, rate limits)
 │   │   │   ├── modules/
 │   │   │   │   ├── household/
 │   │   │   │   │   ├── household.module.ts
@@ -738,11 +753,8 @@ family-hub/
 │   │   │   │   │   │   ├── ritual.tool.ts
 │   │   │   │   │   │   └── household.tool.ts
 │   │   │   │   │   └── __tests__/
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── auth.module.ts
-│   │   │   │   │   ├── auth.resolver.ts
-│   │   │   │   │   ├── auth.service.ts
-│   │   │   │   │   └── __tests__/
+│   │   │   │   ├── auth/                  # Vide — auth via @thallesp/nestjs-better-auth
+│   │   │   │   ├── health/                # Health check (controller REST + resolver GraphQL)
 │   │   │   │   ├── notification/
 │   │   │   │   │   ├── notification.module.ts
 │   │   │   │   │   ├── notification.resolver.ts
@@ -760,19 +772,12 @@ family-hub/
 │   │   │   │       ├── metrics.service.ts
 │   │   │   │       └── __tests__/
 │   │   │   └── common/
-│   │   │       ├── guards/
-│   │   │       │   ├── role.guard.ts
-│   │   │       │   ├── household.guard.ts
-│   │   │       │   └── parental-consent.guard.ts
-│   │   │       ├── decorators/
-│   │   │       │   ├── roles.decorator.ts
-│   │   │       │   ├── current-user.decorator.ts
-│   │   │       │   └── current-household.decorator.ts
-│   │   │       ├── filters/
-│   │   │       │   └── graphql-exception.filter.ts
+│   │   │       ├── guards/                # Planifie story 1.3+ : role.guard.ts, household.guard.ts, parental-consent.guard.ts
+│   │   │       ├── decorators/            # Planifie story 1.3+ : roles.decorator.ts, current-household.decorator.ts
+│   │   │       ├── filters/               # Planifie : graphql-exception.filter.ts
 │   │   │       ├── prisma/
-│   │   │       │   ├── prisma.service.ts
-│   │   │       │   └── household-extension.ts    # Prisma Client Extension (auto householdId)
+│   │   │       │   ├── prisma.service.ts          # ✅ Implemente (PrismaPg driver adapter)
+│   │   │       │   └── household-extension.ts     # Planifie : Prisma Client Extension (auto householdId)
 │   │   │       └── logger/
 │   │   │           └── pino.config.ts
 │   │   ├── test/                     # Integration tests API
@@ -784,67 +789,74 @@ family-hub/
 │   │   └── package.json
 │   │
 │   ├── web/                          # ── Next.js Frontend ──
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   │   ├── layout.tsx
-│   │   │   │   ├── globals.css
-│   │   │   │   ├── (public)/         # Pages publiques SSG/ISR (contenu depuis Strapi)
-│   │   │   │   │   ├── page.tsx      # Landing
-│   │   │   │   │   ├── pricing/
-│   │   │   │   │   ├── blog/
-│   │   │   │   │   │   ├── page.tsx          # Liste articles (Strapi ISR)
-│   │   │   │   │   │   └── [slug]/
-│   │   │   │   │   │       └── page.tsx      # Article (Strapi SSG/ISR)
-│   │   │   │   │   └── legal/
-│   │   │   │   │       ├── privacy/
-│   │   │   │   │       └── terms/
-│   │   │   │   ├── (auth)/
-│   │   │   │   │   ├── login/
-│   │   │   │   │   └── onboarding/
-│   │   │   │   └── (app)/            # App authentifiee
-│   │   │   │       ├── layout.tsx    # Shell avec sidebar
-│   │   │   │       ├── dashboard/
-│   │   │   │       ├── rituals/
-│   │   │   │       ├── household/
-│   │   │   │       ├── settings/
-│   │   │   │       └── ai/
-│   │   │   ├── features/
-│   │   │   │   ├── ritual/
-│   │   │   │   │   ├── ritual.card.tsx
-│   │   │   │   │   ├── ritual.form.tsx
-│   │   │   │   │   ├── ritual.list.tsx
-│   │   │   │   │   ├── ritual.hooks.ts
-│   │   │   │   │   └── __tests__/
-│   │   │   │   ├── household/
-│   │   │   │   │   ├── household.dashboard.tsx
-│   │   │   │   │   ├── member.card.tsx
-│   │   │   │   │   ├── invitation.form.tsx
-│   │   │   │   │   ├── household.hooks.ts
-│   │   │   │   │   └── __tests__/
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── login.form.tsx
-│   │   │   │   │   ├── onboarding.wizard.tsx
-│   │   │   │   │   └── __tests__/
-│   │   │   │   ├── ai/
-│   │   │   │   │   ├── chat.panel.tsx
-│   │   │   │   │   ├── chat.message.tsx
-│   │   │   │   │   └── __tests__/
-│   │   │   │   └── notification/
-│   │   │   │       ├── notification.list.tsx
-│   │   │   │       ├── notification.preferences.tsx
-│   │   │   │       └── __tests__/
-│   │   │   ├── components/           # UI generiques (pas metier)
-│   │   │   │   ├── layout/
-│   │   │   │   │   ├── sidebar.tsx
-│   │   │   │   │   ├── header.tsx
-│   │   │   │   │   └── moment-selector.tsx
-│   │   │   │   └── common/
-│   │   │   │       ├── error-boundary.tsx
-│   │   │   │       └── skeleton.tsx
-│   │   │   └── lib/
-│   │   │       ├── apollo.provider.tsx
-│   │   │       ├── theme.provider.tsx
-│   │   │       └── utils.ts
+│   │   ├── app/
+│   │   │   ├── layout.tsx
+│   │   │   ├── globals.css
+│   │   │   ├── (public)/             # Pages publiques SSG/ISR (contenu depuis Strapi)
+│   │   │   │   ├── page.tsx          # Landing
+│   │   │   │   ├── pricing/
+│   │   │   │   ├── blog/
+│   │   │   │   │   ├── page.tsx          # Liste articles (Strapi ISR)
+│   │   │   │   │   └── [slug]/
+│   │   │   │   │       └── page.tsx      # Article (Strapi SSG/ISR)
+│   │   │   │   └── legal/
+│   │   │   │       ├── privacy/
+│   │   │   │       └── terms/
+│   │   │   ├── (auth)/
+│   │   │   │   ├── login/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── login-form.tsx     # Client component (formulaire)
+│   │   │   │   ├── verify-otp/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── verify-otp-form.tsx
+│   │   │   │   └── onboarding/
+│   │   │   └── (app)/                # App authentifiee
+│   │   │       ├── layout.tsx        # Shell avec sidebar
+│   │   │       ├── dashboard/
+│   │   │       ├── rituals/
+│   │   │       ├── household/
+│   │   │       ├── settings/
+│   │   │       └── ai/
+│   │   ├── features/
+│   │   │   ├── ritual/
+│   │   │   │   ├── ritual.card.tsx
+│   │   │   │   ├── ritual.form.tsx
+│   │   │   │   ├── ritual.list.tsx
+│   │   │   │   ├── ritual.hooks.ts
+│   │   │   │   └── __tests__/
+│   │   │   ├── household/
+│   │   │   │   ├── household.dashboard.tsx
+│   │   │   │   ├── member.card.tsx
+│   │   │   │   ├── invitation.form.tsx
+│   │   │   │   ├── household.hooks.ts
+│   │   │   │   └── __tests__/
+│   │   │   ├── auth/
+│   │   │   │   ├── login.form.tsx
+│   │   │   │   ├── onboarding.wizard.tsx
+│   │   │   │   └── __tests__/
+│   │   │   ├── ai/
+│   │   │   │   ├── chat.panel.tsx
+│   │   │   │   ├── chat.message.tsx
+│   │   │   │   └── __tests__/
+│   │   │   └── notification/
+│   │   │       ├── notification.list.tsx
+│   │   │       ├── notification.preferences.tsx
+│   │   │       └── __tests__/
+│   │   ├── components/               # UI generiques + ShadCN
+│   │   │   ├── ui/                   # Composants ShadCN (card, input, input-otp, etc.)
+│   │   │   ├── layout/
+│   │   │   │   ├── sidebar.tsx
+│   │   │   │   ├── header.tsx
+│   │   │   │   └── moment-selector.tsx
+│   │   │   └── common/
+│   │   │       ├── error-boundary.tsx
+│   │   │       └── skeleton.tsx
+│   │   ├── lib/
+│   │   │   ├── apollo.provider.tsx
+│   │   │   ├── auth-client.ts        # Better Auth client (nextCookies plugin)
+│   │   │   ├── theme.provider.tsx
+│   │   │   └── utils.ts
+│   │   ├── proxy.ts                  # Route protection (Next.js 16, remplace middleware.ts)
 │   │   ├── e2e/                      # Playwright
 │   │   │   ├── ritual.spec.ts
 │   │   │   └── auth.spec.ts
@@ -858,7 +870,8 @@ family-hub/
 │       ├── app/                      # Expo Router (file-based)
 │       │   ├── _layout.tsx
 │       │   ├── (auth)/
-│       │   │   ├── login.tsx
+│       │   │   ├── sign-in.tsx
+│       │   │   ├── verify-otp.tsx
 │       │   │   └── onboarding.tsx
 │       │   ├── (tabs)/
 │       │   │   ├── _layout.tsx
@@ -880,8 +893,10 @@ family-hub/
 │       │   ├── ai/
 │       │   └── notification/
 │       ├── components/
+│       │   └── ui/                   # Composants UI (text-input, otp-input, separator)
 │       ├── lib/
 │       │   ├── apollo.provider.tsx
+│       │   ├── auth-client.ts        # Better Auth client (SecureStore)
 │       │   ├── offline.queue.ts      # Queue de mutations offline
 │       │   └── push.notifications.ts
 │       ├── e2e/                      # Maestro
@@ -931,7 +946,7 @@ family-hub/
 │   │   │   │   ├── member.prisma
 │   │   │   │   ├── ritual.prisma
 │   │   │   │   ├── notification.prisma
-│   │   │   │   ├── auth.prisma
+│   │   │   │   ├── auth.prisma       # ✅ Implemente (story 1.2) — User, Session, Account, Verification
 │   │   │   │   └── compliance.prisma
 │   │   │   ├── migrations/
 │   │   │   └── seed.ts
@@ -945,6 +960,16 @@ family-hub/
 │   │   │   ├── spacing.ts
 │   │   │   ├── moments.ts            # Theming temporel (matin/midi/soir/nuit)
 │   │   │   └── index.ts
+│   │   ├── tsconfig.json
+│   │   └── package.json
+│   │
+│   ├── emails/                        # Templates email transactionnels
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   └── templates/
+│   │   │       ├── otp-code.ts        # Template OTP (3 variantes: sign-in, email-verification, forget-password)
+│   │   │       └── otp-code.spec.ts
+│   │   ├── tsdown.config.ts
 │   │   ├── tsconfig.json
 │   │   └── package.json
 │   │
@@ -978,7 +1003,7 @@ notification → ritual, member, household
 ai → ritual, member, household (read-only via queries)
 compliance → tous (acces donnees pour export/suppression)
 admin → tous (read-only metriques)
-auth → member, household
+auth (@thallesp/nestjs-better-auth) → (aucune dependance — standalone, config dans lib/auth.ts)
 ```
 
 **Regle stricte d'import inter-modules :** un module ne peut jamais importer directement le repository d'un autre module. Communication inter-modules via :
@@ -989,13 +1014,14 @@ auth → member, household
 
 ```
 Frontend (web/mobile)
-    ↕ GraphQL (queries, mutations, subscriptions)
+    ↕ REST /api/auth/* (authentification — Better Auth)
+    ↕ GraphQL (queries, mutations, subscriptions — domaine metier)
 Backend (NestJS)
     ↕ Prisma Client (avec household extension)
 Database (PostgreSQL via Supabase)
 ```
 
-Aucun acces direct du frontend a la base de donnees. Tout passe par GraphQL.
+Aucun acces direct du frontend a la base de donnees. Tout passe par REST (auth) ou GraphQL (metier).
 
 ### Integration Points
 
@@ -1005,7 +1031,8 @@ Aucun acces direct du frontend a la base de donnees. Tout passe par GraphQL.
 |---|---|---|
 | Module → Module (sync) | Service injection via NestJS DI | `RitualService` injecte `MemberService` pour verifier les permissions |
 | Module → Module (async) | Events CQRS via EventBus | `RitualCompletedEvent` → `NotificationHandler` envoie un push |
-| Frontend → Backend | GraphQL queries/mutations | Apollo Client → Apollo Server |
+| Frontend → Backend (auth) | REST /api/auth/* | Better Auth client → Better Auth handler (OAuth, OTP, sessions) |
+| Frontend → Backend (metier) | GraphQL queries/mutations | Apollo Client → Apollo Server (tout sauf auth) |
 | Backend → Frontend (temps reel) | GraphQL Subscriptions via Redis | Le serveur publie, les clients souscrivent par foyer |
 | Backend → Background jobs | BullMQ via Redis | `NotificationService` ajoute un job, `NotificationProcessor` l'execute |
 
@@ -1015,13 +1042,13 @@ Aucun acces direct du frontend a la base de donnees. Tout passe par GraphQL.
 |---|---|---|
 | Supabase | PostgreSQL + Storage | `packages/db/` (Prisma) + Supabase SDK (storage) |
 | Upstash Redis | Cache + Pub/Sub + Sessions + BullMQ | `apps/api/` config modules |
-| Better Auth | Social OAuth + Magic Link | `apps/api/modules/auth/` |
-| Resend | Email transactionnel | `apps/api/modules/notification/` via BullMQ |
+| Better Auth | Social OAuth Google + Email OTP | `apps/api/src/lib/auth.ts` (factory) + `@thallesp/nestjs-better-auth` (module NestJS) |
+| Resend | Email transactionnel | OTP auth: directement dans `lib/auth.ts` callback. Emails non-auth (invitations, rappels): `modules/notification/` via BullMQ (planifie) |
 | Expo Notifications | Push iOS/Android | `apps/api/modules/notification/` |
 | LLM Provider | IA conversationnelle | `apps/api/modules/ai/` |
 | Sentry | Error tracking | `apps/api/`, `apps/web/`, `apps/mobile/` |
 | PostHog | Analytics + Feature flags | `apps/web/`, `apps/mobile/` |
-| Strapi Cloud | CMS contenu marketing, blog, pages legales | `apps/web/src/app/(public)/` consomme l'API Strapi via Next.js ISR |
+| Strapi Cloud | CMS contenu marketing, blog, pages legales | `apps/web/app/(public)/` consomme l'API Strapi via Next.js ISR |
 | Cloudflare | DNS + CDN + WAF | Infra (pas de code applicatif) |
 
 ### Data Flow
@@ -1039,6 +1066,17 @@ User Action (mobile/web)
         → Read model update (CQRS query side)
         → Subscription broadcast (Redis → GraphQL Subscription)
     → Autres clients recoivent la mise a jour (subscription)
+```
+
+**Data Flow — Authentification (Better Auth REST) :**
+
+```
+User Action (web/mobile)
+    → Better Auth Client (signIn.social / emailOtp.sendVerificationOtp / signIn.emailOtp)
+    → REST /api/auth/* → Better Auth handler (toNodeHandler)
+    → Prisma persist (User, Session, Account, Verification)
+    → Cookie set (web: httpOnly) ou token retourne (mobile: SecureStore)
+    → Client redirige vers l'app
 ```
 
 **Data Flow — Contenu marketing (Strapi) :**
@@ -1121,7 +1159,7 @@ Editeur modifie contenu dans Strapi Cloud
 
 **Structure projet**
 
-- [x] Arborescence complete (3 apps + 5 packages implementes, 4 apps + 10 packages prevus)
+- [x] Arborescence complete (3 apps + 6 packages implementes, 4 apps + 10 packages prevus)
 - [x] Boundaries modules definies
 - [x] Points d'integration mappes (internes + externes + Strapi)
 - [x] Data flow documente (applicatif + marketing)
@@ -1134,7 +1172,7 @@ Editeur modifie contenu dans Strapi Cloud
 
 **Points forts :**
 
-- Architecture coherente de bout en bout (GraphQL unifie toute la communication)
+- Architecture coherente de bout en bout (REST pour auth via Better Auth + GraphQL pour le domaine metier)
 - Stack professionnelle complete avec observabilite, security scanning, et analytics
 - Patterns prescriptifs pour guider les agents IA
 - Strategie de scaling progressive sans changement d'architecture
