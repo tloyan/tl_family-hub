@@ -70,11 +70,11 @@ so that je puisse commencer a organiser ma famille.
 
 ### T3: Prisma Client Extension — Isolation par foyer (AC: 3, 5)
 
-- [ ] T3.1: Creer `apps/api/src/common/prisma/household-extension.ts` — `Prisma.defineExtension()` qui filtre automatiquement par `householdId` sur toutes les operations des modeles scopes (whitelist de modeles)
-- [ ] T3.2: Gerer les operations `create`/`createMany` (injecter `householdId` dans `data`) et les operations de lecture/update/delete (injecter dans `where`)
-- [ ] T3.3: Implementer `forHousehold(householdId)` sur `PrismaService` — retourne un client etendu avec le filtre actif
-- [ ] T3.4: Implementer `bypassHouseholdFilter()` sur `PrismaService` — retourne le client de base sans filtre (pour les operations systeme/admin)
-- [ ] T3.5: Integrer `nestjs-cls` (Continuation Local Storage) pour propager le `householdId` du contexte de requete au `PrismaService` automatiquement
+- [x] T3.1: Creer `apps/api/src/common/prisma/household-extension.ts` — `Prisma.defineExtension()` qui filtre automatiquement par `householdId` sur toutes les operations des modeles scopes (whitelist de modeles)
+- [x] T3.2: Gerer les operations `create`/`createMany` (injecter `householdId` dans `data`) et les operations de lecture/update/delete (injecter dans `where`)
+- [x] T3.3: Implementer `forHousehold(householdId)` sur `PrismaService` — retourne un client etendu avec le filtre actif
+- [x] T3.4: Implementer `bypassHouseholdFilter()` sur `PrismaService` — retourne le client de base sans filtre (pour les operations systeme/admin)
+- [x] T3.5: Integrer `nestjs-cls` (Continuation Local Storage) pour propager le `householdId` du contexte de requete au `PrismaService` automatiquement
 
 ### T4: Module NestJS Household — Backend GraphQL (AC: 1, 4)
 
