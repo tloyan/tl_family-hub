@@ -52,14 +52,14 @@ so that je puisse commencer a organiser ma famille.
 
 ### T1: Schema Prisma — Modele de donnees familial (AC: 1, 2, 6)
 
-- [ ] T1.1: Creer `packages/db/prisma/schema/household.prisma` avec les modeles `Household`, `HouseholdMember`, `Circle` et les enums `HouseholdRole`, `CircleType`
-- [ ] T1.2: Ajouter la relation `User` → `HouseholdMember` (un User a N HouseholdMember, chaque HouseholdMember lie un User a un Household)
-- [ ] T1.3: Definir les 5 cercles comme enum `CircleType` : `PERSONAL`, `COUPLE`, `HOUSEHOLD`, `EXTENDED_FAMILY`, `ACQUAINTANCES`
-- [ ] T1.4: Definir l'enum `HouseholdRole` : `OWNER`, `ADMIN`, `ADULT`, `CHILD`, `PROVIDER`
-- [ ] T1.5: Ajouter le champ `color` (String) sur `HouseholdMember` pour la couleur automatique
-- [ ] T1.6: Ajouter le champ `version` (Int, default 1) sur `Household` et `HouseholdMember` pour l'Optimistic Concurrency Control
-- [ ] T1.7: Generer et appliquer la migration Prisma (`prisma migrate dev --name household_family_model`)
-- [ ] T1.8: Verifier la compatibilite avec les schemas `base.prisma` et `auth.prisma` existants
+- [x] T1.1: Creer `packages/db/prisma/schema/household.prisma` avec les modeles `Household`, `HouseholdMember`, `Circle` et les enums `HouseholdRole`, `CircleType`
+- [x] T1.2: Ajouter la relation `User` → `HouseholdMember` (un User a N HouseholdMember, chaque HouseholdMember lie un User a un Household)
+- [x] T1.3: Definir les 5 cercles comme enum `CircleType` : `PERSONAL`, `COUPLE`, `HOUSEHOLD`, `EXTENDED_FAMILY`, `ACQUAINTANCES`
+- [x] T1.4: Definir l'enum `HouseholdRole` : `OWNER`, `ADMIN`, `ADULT`, `CHILD`, `PROVIDER`
+- [x] T1.5: Ajouter le champ `color` (String) sur `HouseholdMember` pour la couleur automatique
+- [x] T1.6: Ajouter le champ `version` (Int, default 1) sur `Household` et `HouseholdMember` pour l'Optimistic Concurrency Control
+- [x] T1.7: Generer et appliquer la migration Prisma (`prisma migrate dev --name household_family_model`)
+- [x] T1.8: Verifier la compatibilite avec les schemas `base.prisma` et `auth.prisma` existants
 
 ### T2: Shared Types — Enums, schemas Zod et constantes (AC: 1, 2, 4)
 
