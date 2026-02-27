@@ -63,10 +63,10 @@ so that je puisse commencer a organiser ma famille.
 
 ### T2: Shared Types — Enums, schemas Zod et constantes (AC: 1, 2, 4)
 
-- [ ] T2.1: Creer `packages/shared/src/enums/household.ts` — exporter les enums `HouseholdRole`, `CircleType` (miroir des enums Prisma pour usage frontend)
-- [ ] T2.2: Creer `packages/shared/src/schemas/household.schema.ts` — schemas Zod `CreateHouseholdInput` (name: string, min 1 char, max 100 chars)
-- [ ] T2.3: Creer `packages/shared/src/constants/household.ts` — palette de couleurs membres (8 couleurs predefinies attribuees en round-robin), nombre max de membres par foyer
-- [ ] T2.4: Mettre a jour les fichiers `index.ts` de chaque dossier pour exporter les nouveaux modules
+- [x] T2.1: Creer `packages/shared/src/enums/household.ts` — exporter les enums `HouseholdRole`, `CircleType` (miroir des enums Prisma pour usage frontend)
+- [x] T2.2: Creer `packages/shared/src/schemas/household.schema.ts` — schemas Zod `CreateHouseholdInput` (name: string, min 1 char, max 100 chars)
+- [x] T2.3: Creer `packages/shared/src/constants/household.ts` — palette de couleurs membres (8 couleurs predefinies attribuees en round-robin), nombre max de membres par foyer
+- [x] T2.4: Mettre a jour les fichiers `index.ts` de chaque dossier pour exporter les nouveaux modules
 
 ### T3: Prisma Client Extension — Isolation par foyer (AC: 3, 5)
 
