@@ -1,8 +1,12 @@
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { HouseholdModel } from './household.model';
 import { CreateHouseholdInput } from './household.dto';
 import { HouseholdService } from './household.service';
+import { HouseholdGuard } from '../../common/guards/household.guard';
+import { CurrentHousehold } from '../../common/decorators/current-household.decorator';
+import { HouseholdAccessDeniedException } from '../../common/exceptions/household.exception';
 
 @Resolver(() => HouseholdModel)
 export class HouseholdResolver {
@@ -21,8 +25,15 @@ export class HouseholdResolver {
     return this.householdService.findMyHousehold(session.user.id);
   }
 
+  @UseGuards(HouseholdGuard)
   @Query(() => HouseholdModel)
-  async household(@Args('id', { type: () => ID }) id: string): Promise<HouseholdModel> {
+  async household(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentHousehold() householdId: string,
+  ): Promise<HouseholdModel> {
+    if (id !== householdId) {
+      throw new HouseholdAccessDeniedException();
+    }
     return this.householdService.findById(id);
   }
 }

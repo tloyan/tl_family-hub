@@ -1,4 +1,9 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 export class HouseholdNotFoundException extends NotFoundException {
   constructor() {
@@ -15,5 +20,11 @@ export class HouseholdAlreadyExistsException extends ConflictException {
 export class HouseholdAccessDeniedException extends ForbiddenException {
   constructor() {
     super({ code: 'HOUSEHOLD_ACCESS_DENIED', message: 'Access to this household is denied' });
+  }
+}
+
+export class HouseholdHeaderMissingException extends BadRequestException {
+  constructor() {
+    super({ code: 'HOUSEHOLD_HEADER_MISSING', message: 'x-household-id header is required' });
   }
 }

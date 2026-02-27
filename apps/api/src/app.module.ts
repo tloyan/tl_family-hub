@@ -34,7 +34,7 @@ import { createAuth } from './lib/auth';
     AuthModule.forRootAsync({
       inject: [PrismaService],
       useFactory: (prisma: PrismaService) => ({
-        auth: createAuth(prisma),
+        auth: createAuth(prisma.bypassHouseholdFilter()),
       }),
     }),
     HealthModule,

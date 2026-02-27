@@ -88,9 +88,9 @@ so that je puisse commencer a organiser ma famille.
 
 ### T5: Guard et decorateur Household Context (AC: 3)
 
-- [ ] T5.1: Creer `apps/api/src/common/guards/household.guard.ts` — guard NestJS qui extrait le `householdId` du contexte utilisateur (via `HouseholdMember`) et le stocke dans `nestjs-cls`
-- [ ] T5.2: Creer `apps/api/src/common/decorators/current-household.decorator.ts` — decorateur `@CurrentHousehold()` pour injecter le `householdId` courant dans les resolvers
-- [ ] T5.3: Appliquer le guard sur les resolvers qui necessitent un contexte foyer (pas global — certaines routes comme `createHousehold` n'ont pas de foyer)
+- [x] T5.1: Creer `apps/api/src/common/guards/household.guard.ts` — guard NestJS qui extrait le `householdId` du contexte utilisateur (via `HouseholdMember`) et le stocke dans `nestjs-cls`
+- [x] T5.2: Creer `apps/api/src/common/decorators/current-household.decorator.ts` — decorateur `@CurrentHousehold()` pour injecter le `householdId` courant dans les resolvers
+- [x] T5.3: Appliquer le guard sur les resolvers qui necessitent un contexte foyer (pas global — certaines routes comme `createHousehold` n'ont pas de foyer)
 
 ### T6: Client Web — Ecran creation de foyer (AC: 1, 4)
 
@@ -134,52 +134,32 @@ so that je puisse commencer a organiser ma famille.
 
 C'est le composant le plus important de cette story. Il garantit l'isolation des donnees par foyer (FR32, NFR9).
 
-**Pattern retenu : Application-level filtering avec `Prisma.defineExtension()`**
+**Pattern retenu : Auto-scoping transparent via Proxy + lazy getter**
+
+L'extension est creee **une seule fois** au demarrage avec un lazy getter `() => string | undefined`. Le getter lit le `householdId` depuis CLS **au moment de la query** — chaque requete obtient donc son propre householdId. Si `undefined` (pas de guard applique), l'extension passe sans filtrer.
 
 ```typescript
 // apps/api/src/common/prisma/household-extension.ts
-import { Prisma } from '@family-hub/db';
-
-// Whitelist des modeles qui ont un champ householdId
-// NE PAS inclure : User, Session, Account, Verification (tables auth sans householdId)
-const HOUSEHOLD_SCOPED_MODELS = new Set([
-  'Household',       // le foyer lui-meme (filtrage par id, pas householdId)
-  'HouseholdMember', // les membres du foyer
-  // Ajouter les futurs modeles ici : 'Ritual', 'Invitation', etc.
+const HOUSEHOLD_SCOPED_MODELS = new Set<string>([
+  'HouseholdMember',
+  'Circle',
+  // Future: 'Ritual', 'Invitation', etc.
+  // NOTE: Household n'est PAS inclus — il n'a pas de champ householdId.
+  // L'acces au foyer est controle par le HouseholdGuard, pas par l'extension.
 ]);
 
-// Operations qui supportent un `where` clause
-const FILTERABLE_OPERATIONS = new Set([
-  'findMany', 'findFirst', 'findFirstOrThrow', 'findUnique', 'findUniqueOrThrow',
-  'updateMany', 'update', 'deleteMany', 'delete', 'count', 'aggregate', 'groupBy',
-]);
-
-export function householdExtension(householdId: string) {
+export function householdExtension(getHouseholdId: () => string | undefined) {
+  // Le getter est appele a chaque query, pas a la creation de l'extension
   return Prisma.defineExtension((client) =>
     client.$extends({
-      name: 'householdFilter',
       query: {
         $allModels: {
           async $allOperations({ model, operation, args, query }) {
-            if (!model || !HOUSEHOLD_SCOPED_MODELS.has(model)) {
-              return query(args);
+            const householdId = getHouseholdId();
+            if (!householdId || !HOUSEHOLD_SCOPED_MODELS.has(model)) {
+              return query(args); // pass-through si pas de contexte foyer
             }
-            // Pour Household, filtrer par `id` ; pour les autres, par `householdId`
-            const filterField = model === 'Household' ? 'id' : 'householdId';
-
-            if (FILTERABLE_OPERATIONS.has(operation)) {
-              (args as any).where = { ...(args as any).where, [filterField]: householdId };
-            } else if (operation === 'create') {
-              if (model !== 'Household') {
-                (args as any).data = { ...(args as any).data, householdId };
-              }
-            } else if (operation === 'createMany') {
-              const data = Array.isArray((args as any).data)
-                ? (args as any).data.map((d: any) => ({ ...d, householdId }))
-                : { ...(args as any).data, householdId };
-              (args as any).data = data;
-            }
-            return query(args);
+            // ... injection householdId dans where/data selon l'operation
           },
         },
       },
@@ -188,24 +168,41 @@ export function householdExtension(householdId: string) {
 }
 ```
 
-**Integration dans PrismaService :**
+**Integration dans PrismaService — Proxy pattern :**
+
+`PrismaService` n'herite plus de `PrismaClient`. Il encapsule deux clients et un `Proxy` :
 
 ```typescript
-// Ajouter a apps/api/src/modules/prisma/prisma.service.ts
-forHousehold(householdId: string) {
-  return this.$extends(householdExtension(householdId));
-}
+// apps/api/src/modules/prisma/prisma.service.ts
+export interface PrismaService extends PrismaClient {} // interface merging pour TypeScript
 
-bypassHouseholdFilter() {
-  return this; // retourne le client de base sans filtre
+export class PrismaService implements OnModuleInit, OnModuleDestroy {
+  private readonly baseClient: PrismaClient;       // brut, sans filtre
+  private readonly scopedClient: PrismaClient;      // avec extension auto-scoping
+
+  constructor(cls: ClsService<AppClsStore>) {
+    this.baseClient = new PrismaClient({ adapter });
+    this.scopedClient = this.baseClient.$extends(
+      householdExtension(() => cls.get('householdId')), // lazy getter CLS
+    );
+    // Proxy : delegue les acces modeles (.household, .$transaction, etc.) a scopedClient
+    return new Proxy(this, { get(target, prop, receiver) { /* ... */ } });
+  }
+
+  bypassHouseholdFilter(): PrismaClient { return this.baseClient; }
+  forHousehold(id: string): PrismaClient { /* extension explicite pour jobs background */ }
 }
 ```
 
+Le code applicatif utilise `this.prisma.householdMember.findFirst(...)` normalement — le scoping est transparent.
+
 **Propagation du contexte avec `nestjs-cls` :**
 
-- Installer `nestjs-cls` pour propager le `householdId` par requete via AsyncLocalStorage
-- Le `HouseholdGuard` extrait le `householdId` du user authentifie et le stocke dans le CLS
-- Les services/repositories accedent au client scope via `prisma.forHousehold(householdId)`
+- `nestjs-cls` en mode `guard: { mount: true }` initialise le contexte CLS par requete
+- Le `HouseholdGuard` (per-resolver) extrait le header `x-household-id`, valide le membership, et stocke le `householdId` dans CLS
+- Le Proxy `PrismaService` delegue automatiquement les queries au `scopedClient` qui lit le CLS
+- Les resolvers sans guard (ex: `createHousehold`, `myHousehold`) n'ont pas de `householdId` en CLS — l'extension passe sans filtrer
+- `AuthModule` recoit `prisma.bypassHouseholdFilter()` pour eviter que les tables auth ne passent par l'extension
 
 > **ATTENTION Prisma 7.x** : `$use()` middleware a ete completement supprime. Seul `$extends` est disponible pour intercepter les queries. L'API `$extends` est stable et identique a Prisma 5/6.
 
@@ -401,6 +398,7 @@ apps/mobile/app/(tabs)/household.tsx                   (nouveau ou modifie)
 | `HOUSEHOLD_ALREADY_EXISTS` | 409 | L'utilisateur a deja un foyer (MVP : 1 seul) |
 | `HOUSEHOLD_NAME_INVALID` | 400 | Nom du foyer invalide (vide ou trop long) |
 | `HOUSEHOLD_ACCESS_DENIED` | 403 | Tentative d'acces a un foyer non-autorise |
+| `HOUSEHOLD_HEADER_MISSING` | 400 | Header `x-household-id` requis mais absent (resolvers avec HouseholdGuard) |
 
 ### References
 
@@ -421,10 +419,47 @@ apps/mobile/app/(tabs)/household.tsx                   (nouveau ou modifie)
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+#### T5: Guard et decorateur Household Context — Refactoring Auto-scoping Prisma via CLS
+
+**Architecture retenue : Guard-only (pas de middleware CLS pour le header)**
+
+Le plan initial prevoyait un middleware CLS pour extraire `x-household-id` du header, puis un guard pour valider le membership et poser un flag `householdValidated`. Apres reflexion, cette approche a ete simplifiee :
+
+- **Le guard fait tout** : extraction du header `x-household-id` + validation du membership + stockage du `householdId` dans CLS
+- **Pas de flag `householdValidated`** : si le guard n'a pas ete applique, le `householdId` n'est jamais dans CLS — `@CurrentHousehold()` detecte naturellement l'absence
+- **Plus securise** : avec un middleware, un header `x-household-id` malveillant affecterait l'auto-scoping meme sur des resolvers non gardes (`createHousehold`, `myHousehold`). Avec le guard-only, le header est ignore tant que le guard n'a pas valide le membership
+- **CLS reste en mode `guard: { mount: true }`** : pas de changement par rapport a la config initiale
+
+**Auto-scoping Prisma via Proxy**
+
+Le `PrismaService` ne herite plus de `PrismaClient`. Il encapsule deux clients :
+
+- `baseClient` : PrismaClient brut, sans filtre — utilise par `bypassHouseholdFilter()` (auth, guard, operations systeme)
+- `scopedClient` : `baseClient.$extends(householdExtension(getter))` — le getter lit `householdId` depuis CLS au moment de la query
+
+Un `Proxy` redirige tous les acces modeles (`.household`, `.householdMember`, `.$transaction`, etc.) vers `scopedClient`. Le code applicatif utilise `this.prisma.householdMember.findFirst(...)` normalement — le scoping est transparent.
+
+**Extension avec lazy getter** : `householdExtension` recoit une fonction `() => string | undefined` au lieu d'un `string`. L'extension est creee une seule fois au demarrage ; le getter lit le CLS a chaque query. Si `undefined` (pas de guard applique), l'extension passe sans filtrer.
+
+**AuthModule** : recoit `prisma.bypassHouseholdFilter()` pour eviter que les tables auth (sans `householdId`) ne passent par l'extension.
+
+**Divergence HOUSEHOLD_SCOPED_MODELS** : le doc initial incluait `Household` dans les scoped models avec un filtrage special par `id` au lieu de `householdId`. L'implementation ne l'inclut pas — `Household` n'a pas de champ `householdId`, et le filtrage par `id` est une logique differente (controle d'acces, pas isolation de donnees). L'acces au foyer est controle par le `HouseholdGuard`, pas par l'extension.
+
+**Resolver `household(id)`** : conserve le guard + `@CurrentHousehold()` + comparaison `id !== householdId` comme exemple concret du pattern. La validation du membership pourrait se faire dans le service (anticipation multi-foyer), mais le guard evite une double requete et fournit un cas d'usage documente.
+
 ### File List
+
+- `apps/api/src/common/cls/cls.store.ts` — ajout `extends ClsStore`
+- `apps/api/src/common/prisma/household-extension.ts` — parametre lazy getter `() => string | undefined`
+- `apps/api/src/modules/prisma/prisma.service.ts` — rewrite Proxy (baseClient + scopedClient), suppression `scoped()` et `HouseholdScopedPrismaClient`
+- `apps/api/src/app.module.ts` — `bypassHouseholdFilter()` pour AuthModule
+- `apps/api/src/common/guards/household.guard.ts` — extraction header + validation membership + set CLS, utilise `bypassHouseholdFilter()`
+- `apps/api/src/common/decorators/current-household.decorator.ts` — check `householdId` dans CLS
+- `apps/api/src/common/exceptions/household.exception.ts` — ajout `HouseholdHeaderMissingException`
+- `apps/api/src/modules/household/household.resolver.ts` — `@UseGuards(HouseholdGuard)` + `@CurrentHousehold()` sur query `household`

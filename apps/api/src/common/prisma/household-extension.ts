@@ -23,14 +23,16 @@ const FILTERABLE_OPERATIONS = new Set<string>([
 
 type QueryArgs = Record<string, unknown>;
 
-export function householdExtension(householdId: string) {
+export function householdExtension(getHouseholdId: () => string | undefined) {
   return Prisma.defineExtension((client) =>
     client.$extends({
       name: 'householdFilter',
       query: {
         $allModels: {
           async $allOperations({ model, operation, args, query }) {
-            if (!HOUSEHOLD_SCOPED_MODELS.has(model)) {
+            const householdId = getHouseholdId();
+
+            if (!householdId || !HOUSEHOLD_SCOPED_MODELS.has(model)) {
               return query(args);
             }
 
