@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { HealthModule } from './modules/health/health.module';
+import { HouseholdModule } from './modules/household/household.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { createAuth } from './lib/auth';
 
@@ -32,6 +33,7 @@ import { createAuth } from './lib/auth';
       }),
     }),
     HealthModule,
+    HouseholdModule,
   ],
 })
 export class AppModule {}

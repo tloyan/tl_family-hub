@@ -78,13 +78,13 @@ so that je puisse commencer a organiser ma famille.
 
 ### T4: Module NestJS Household — Backend GraphQL (AC: 1, 4)
 
-- [ ] T4.1: Creer `apps/api/src/modules/household/household.module.ts` — module NestJS important `PrismaModule`
-- [ ] T4.2: Creer `apps/api/src/modules/household/household.model.ts` — `@ObjectType()` GraphQL : `Household` (id, name, membersCount, createdAt), `HouseholdMember` (id, role, color, user, joinedAt)
-- [ ] T4.3: Creer `apps/api/src/modules/household/household.dto.ts` — `@InputType()` GraphQL : `CreateHouseholdInput` (name: String)
-- [ ] T4.4: Creer `apps/api/src/modules/household/household.repository.ts` — repository Prisma avec methodes `create`, `findById`, `findByUserId`, `addMember`
-- [ ] T4.5: Creer `apps/api/src/modules/household/household.service.ts` — logique metier : creation foyer + auto-attribution role owner + couleur + creation des 5 cercles
-- [ ] T4.6: Creer `apps/api/src/modules/household/household.resolver.ts` — mutations `createHousehold(input)`, queries `myHousehold`, `household(id)`
-- [ ] T4.7: Enregistrer `HouseholdModule` dans `app.module.ts`
+- [x] T4.1: Creer `apps/api/src/modules/household/household.module.ts` — module NestJS important `PrismaModule`
+- [x] T4.2: Creer `apps/api/src/modules/household/household.model.ts` — `@ObjectType()` GraphQL : `Household` (id, name, membersCount, createdAt), `HouseholdMember` (id, role, color, user, joinedAt)
+- [x] T4.3: Creer `apps/api/src/modules/household/household.dto.ts` — `@InputType()` GraphQL : `CreateHouseholdInput` (name: String)
+- [x] T4.4: Creer `apps/api/src/modules/household/household.repository.ts` — repository Prisma avec methodes `create`, `findById`, `findByUserId`, `countMembersByHouseholdId`
+- [x] T4.5: Creer `apps/api/src/modules/household/household.service.ts` — logique metier : creation foyer + auto-attribution role owner + couleur + creation des 5 cercles
+- [x] T4.6: Creer `apps/api/src/modules/household/household.resolver.ts` — mutations `createHousehold(input)`, queries `myHousehold`, `household(id)`
+- [x] T4.7: Enregistrer `HouseholdModule` dans `app.module.ts`
 
 ### T5: Guard et decorateur Household Context (AC: 3)
 
