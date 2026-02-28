@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
-import { CircleType, createHouseholdInput, getNextColor } from '@family-hub/shared';
+import {
+  CircleType,
+  HouseholdRole,
+  createHouseholdInput,
+  updateHouseholdInput,
+  getNextColor,
+} from '@family-hub/shared';
 import {
   HouseholdNotFoundException,
   HouseholdAlreadyExistsException,
+  NotHouseholdOwnerException,
 } from '../../common/exceptions/household.exception';
 import { HouseholdRepository } from './household.repository';
 import { HouseholdModel, HouseholdMemberModel } from './household.model';
-import type { CreateHouseholdInput } from './household.dto';
+import type { CreateHouseholdInput, UpdateHouseholdInput } from './household.dto';
 
 @Injectable()
 export class HouseholdService {
@@ -38,6 +45,38 @@ export class HouseholdService {
       return null;
     }
     return this.toModel(household);
+  }
+
+  async update(userId: string, input: UpdateHouseholdInput): Promise<HouseholdModel> {
+    const parsed = updateHouseholdInput.parse({ name: input.name });
+
+    const household = await this.householdRepository.findByUserId(userId);
+    if (!household) {
+      throw new HouseholdNotFoundException();
+    }
+
+    const member = household.members.find((m) => m.userId === userId);
+    if (member?.role !== HouseholdRole.OWNER) {
+      throw new NotHouseholdOwnerException();
+    }
+
+    const updated = await this.householdRepository.update(household.id, { name: parsed.name });
+    return this.toModel(updated);
+  }
+
+  async delete(userId: string): Promise<boolean> {
+    const household = await this.householdRepository.findByUserId(userId);
+    if (!household) {
+      throw new HouseholdNotFoundException();
+    }
+
+    const member = household.members.find((m) => m.userId === userId);
+    if (member?.role !== HouseholdRole.OWNER) {
+      throw new NotHouseholdOwnerException();
+    }
+
+    await this.householdRepository.delete(household.id);
+    return true;
   }
 
   async findById(id: string): Promise<HouseholdModel> {

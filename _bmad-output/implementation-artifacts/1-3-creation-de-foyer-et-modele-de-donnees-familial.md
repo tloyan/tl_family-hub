@@ -94,12 +94,12 @@ so that je puisse commencer a organiser ma famille.
 
 ### T6: Client Web — Ecran creation de foyer (AC: 1, 4)
 
-- [ ] T6.1: Creer `apps/web/app/(app)/layout.tsx` — layout de l'app authentifiee (shell minimal pour le MVP)
-- [ ] T6.2: Creer `apps/web/app/(app)/household/create/page.tsx` — page creation de foyer (formulaire nom + bouton creer)
-- [ ] T6.3: Creer `apps/web/app/(app)/household/page.tsx` — page dashboard foyer (nom, membres, couleurs)
-- [ ] T6.4: Configurer les operations GraphQL (`createHousehold` mutation, `myHousehold` query) avec Apollo Client
-- [ ] T6.5: Implementer la redirection post-auth : si l'utilisateur n'a pas de foyer → page creation, sinon → dashboard foyer
-- [ ] T6.6: Ajouter le composant `Avatar` ShadCN pour l'affichage des membres avec couleur
+- [x] T6.1: Creer `apps/web/app/(app)/layout.tsx` — layout de l'app authentifiee (shell minimal pour le MVP)
+- [x] T6.2: Creer `apps/web/app/(app)/household/create/page.tsx` — page creation de foyer (formulaire nom + bouton creer)
+- [x] T6.3: Creer `apps/web/app/(app)/household/page.tsx` — page dashboard foyer (nom, membres, couleurs)
+- [x] T6.4: Configurer les operations GraphQL (`createHousehold` mutation, `myHousehold` query) avec Apollo Client
+- [x] T6.5: Implementer la redirection post-auth : si l'utilisateur n'a pas de foyer → page creation, sinon → dashboard foyer
+- [x] T6.6: Ajouter le composant `Avatar` ShadCN pour l'affichage des membres avec couleur
 
 ### T7: Client Mobile — Ecran creation de foyer (AC: 1, 4)
 
@@ -116,6 +116,24 @@ so that je puisse commencer a organiser ma famille.
 - [ ] T8.3: Tests d'integration (Supertest) — flux complet : auth → createHousehold → myHousehold → verification isolation cross-foyer
 - [ ] T8.4: Test d'isolation cross-foyer automatise — creer 2 foyers, verifier qu'un user du foyer A ne peut pas voir les donnees du foyer B
 - [ ] T8.5: Ajouter les variables necessaires au workflow CI si besoin
+
+### T9: Update/Delete foyer — Backend + Frontend Web (AC: 1, 4)
+
+- [x] T9.1: Ajouter `updateHouseholdInput` Zod schema dans `packages/shared/src/schemas/household.schema.ts`
+- [x] T9.2: Ajouter `NotHouseholdOwnerException` dans `apps/api/src/common/exceptions/household.exception.ts`
+- [x] T9.3: Ajouter methodes `update()` et `delete()` dans `household.repository.ts`
+- [x] T9.4: Ajouter `UpdateHouseholdInput` DTO GraphQL dans `household.dto.ts`
+- [x] T9.5: Ajouter methodes `update()` et `delete()` avec verification OWNER dans `household.service.ts`
+- [x] T9.6: Ajouter mutations `updateHousehold` et `deleteHousehold` dans `household.resolver.ts`
+- [x] T9.7: Installer composant ShadCN `alert-dialog` dans `apps/web`
+- [x] T9.8: Ajouter `UPDATE_HOUSEHOLD_MUTATION` et `DELETE_HOUSEHOLD_MUTATION` dans `apps/web/lib/graphql/household.ts`
+- [x] T9.9: Implementer edition inline du nom + zone de danger avec suppression dans `household-dashboard.tsx`
+
+### T10: Client Mobile — Update/Delete foyer (AC: 1, 4)
+
+- [ ] T10.1: Ajouter les operations GraphQL `updateHousehold` et `deleteHousehold` dans le client mobile
+- [ ] T10.2: Implementer l'edition du nom de foyer dans l'ecran dashboard mobile
+- [ ] T10.3: Implementer la suppression du foyer avec confirmation dans l'ecran dashboard mobile
 
 ## Dev Notes
 
@@ -399,6 +417,7 @@ apps/mobile/app/(tabs)/household.tsx                   (nouveau ou modifie)
 | `HOUSEHOLD_NAME_INVALID` | 400 | Nom du foyer invalide (vide ou trop long) |
 | `HOUSEHOLD_ACCESS_DENIED` | 403 | Tentative d'acces a un foyer non-autorise |
 | `HOUSEHOLD_HEADER_MISSING` | 400 | Header `x-household-id` requis mais absent (resolvers avec HouseholdGuard) |
+| `NOT_HOUSEHOLD_OWNER` | 403 | Seul le owner peut effectuer cette action |
 
 ### References
 
@@ -453,6 +472,22 @@ Un `Proxy` redirige tous les acces modeles (`.household`, `.householdMember`, `.
 
 **Resolver `household(id)`** : conserve le guard + `@CurrentHousehold()` + comparaison `id !== householdId` comme exemple concret du pattern. La validation du membership pourrait se faire dans le service (anticipation multi-foyer), mais le guard evite une double requete et fournit un cas d'usage documente.
 
+#### T9: Update/Delete foyer — Backend + Frontend Web
+
+**Pattern OWNER check : service-level, pas de guard**
+
+Les mutations `updateHousehold` et `deleteHousehold` n'utilisent pas le `HouseholdGuard`. Comme `createHousehold`, elles recoivent `@Session()` pour identifier l'utilisateur. Le service appelle `findByUserId` pour recuperer le foyer et le membership, puis compare le `role` du membre avec `OWNER`. Si le role ne correspond pas, une `NotHouseholdOwnerException` (403) est levee.
+
+**Pas de `HouseholdGuard` sur les mutations update/delete** : le guard suppose un header `x-household-id` cote client. Pour update/delete, le `householdId` est deduit du membership de l'utilisateur (son unique foyer au MVP), pas d'un header. Le pattern est identique a `createHousehold`.
+
+**Frontend : UI toujours visible, backend enforce OWNER** : l'edition inline du nom et la zone de danger (suppression) sont affichees pour tous les membres. Le backend renvoie une erreur 403 si un non-owner tente l'operation. Le message d'erreur est affiche en francais dans l'UI.
+
+**Cache Apollo** :
+- `updateHousehold` : `writeQuery` pour mettre a jour le cache `MY_HOUSEHOLD_QUERY` immediatement apres la mutation
+- `deleteHousehold` : `client.clearStore()` pour vider tout le cache, puis redirect vers `/household/create`
+
+**`AlertDialog` ShadCN** : utilise pour la confirmation de suppression destructive. Le pattern standard ShadCN avec `AlertDialogTrigger`, `AlertDialogContent`, `AlertDialogAction` (variant destructive).
+
 ### File List
 
 - `apps/api/src/common/cls/cls.store.ts` — ajout `extends ClsStore`
@@ -463,3 +498,15 @@ Un `Proxy` redirige tous les acces modeles (`.household`, `.householdMember`, `.
 - `apps/api/src/common/decorators/current-household.decorator.ts` — check `householdId` dans CLS
 - `apps/api/src/common/exceptions/household.exception.ts` — ajout `HouseholdHeaderMissingException`
 - `apps/api/src/modules/household/household.resolver.ts` — `@UseGuards(HouseholdGuard)` + `@CurrentHousehold()` sur query `household`
+
+#### T9: Update/Delete foyer — Backend + Frontend Web
+
+- `packages/shared/src/schemas/household.schema.ts` — ajout `updateHouseholdInput` Zod schema
+- `apps/api/src/common/exceptions/household.exception.ts` — ajout `NotHouseholdOwnerException`
+- `apps/api/src/modules/household/household.repository.ts` — ajout methodes `update()`, `delete()`
+- `apps/api/src/modules/household/household.dto.ts` — ajout `UpdateHouseholdInput` DTO GraphQL
+- `apps/api/src/modules/household/household.service.ts` — ajout methodes `update()`, `delete()`
+- `apps/api/src/modules/household/household.resolver.ts` — ajout mutations `updateHousehold`, `deleteHousehold`
+- `apps/web/components/ui/alert-dialog.tsx` — nouveau (ShadCN)
+- `apps/web/lib/graphql/household.ts` — ajout mutations `UPDATE_HOUSEHOLD_MUTATION`, `DELETE_HOUSEHOLD_MUTATION`
+- `apps/web/app/(app)/household/household-dashboard.tsx` — ajout edition inline du nom + zone de danger avec suppression

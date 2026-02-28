@@ -28,3 +28,12 @@ export class HouseholdHeaderMissingException extends BadRequestException {
     super({ code: 'HOUSEHOLD_HEADER_MISSING', message: 'x-household-id header is required' });
   }
 }
+
+export class NotHouseholdOwnerException extends ForbiddenException {
+  constructor() {
+    super({
+      code: 'NOT_HOUSEHOLD_OWNER',
+      message: 'Only the household owner can perform this action',
+    });
+  }
+}

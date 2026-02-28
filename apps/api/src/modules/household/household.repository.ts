@@ -55,6 +55,18 @@ export class HouseholdRepository {
     return member?.household ?? null;
   }
 
+  async update(id: string, data: { name: string }) {
+    return this.prisma.household.update({
+      where: { id },
+      data: { name: data.name },
+      include: { members: { include: { user: true } } },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.household.delete({ where: { id } });
+  }
+
   async countMembersByHouseholdId(householdId: string): Promise<number> {
     return this.prisma.householdMember.count({
       where: { householdId },
