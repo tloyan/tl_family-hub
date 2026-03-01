@@ -103,11 +103,11 @@ so that je puisse commencer a organiser ma famille.
 
 ### T7: Client Mobile — Ecran creation de foyer (AC: 1, 4)
 
-- [ ] T7.1: Creer `apps/mobile/app/(app)/household/create.tsx` — ecran creation de foyer (formulaire nom + bouton creer)
-- [ ] T7.2: Creer `apps/mobile/app/(tabs)/household.tsx` — onglet foyer dans le tab navigator (dashboard foyer : nom, membres, couleurs)
-- [ ] T7.3: Configurer les operations GraphQL (`createHousehold` mutation, `myHousehold` query) avec Apollo Client
-- [ ] T7.4: Implementer la redirection post-auth : si pas de foyer → ecran creation, sinon → tabs
-- [ ] T7.5: Creer les composants UI necessaires (avatar membre avec couleur)
+- [x] T7.1: Creer `apps/mobile/app/household/create.tsx` — ecran creation de foyer (formulaire nom + bouton creer)
+- [x] T7.2: Remplacer le placeholder `apps/mobile/app/(tabs)/index.tsx` par le dashboard foyer (nom, membres, couleurs) + renommer tab Home → Foyer
+- [x] T7.3: Configurer les operations GraphQL dans `apps/mobile/features/household/graphql.ts` + constantes dans `constants.ts`
+- [x] T7.4: Implementer la redirection post-auth dans `app/index.tsx` (query `myHousehold` apres session check) + fix verify-otp redirect vers `/`
+- [x] T7.5: Creer les composants UI : `MemberAvatar`, `MembersList`, `HouseholdNameEditor`, `DangerZone` dans `features/household/components/`
 
 ### T8: Tests (AC: 3, 5)
 
@@ -131,9 +131,9 @@ so that je puisse commencer a organiser ma famille.
 
 ### T10: Client Mobile — Update/Delete foyer (AC: 1, 4)
 
-- [ ] T10.1: Ajouter les operations GraphQL `updateHousehold` et `deleteHousehold` dans le client mobile
-- [ ] T10.2: Implementer l'edition du nom de foyer dans l'ecran dashboard mobile
-- [ ] T10.3: Implementer la suppression du foyer avec confirmation dans l'ecran dashboard mobile
+- [x] T10.1: Operations GraphQL `updateHousehold` et `deleteHousehold` incluses dans `features/household/graphql.ts` (T7.3)
+- [x] T10.2: Edition inline du nom via `HouseholdNameEditor` avec validation Zod et `refetchQueries`
+- [x] T10.3: Suppression du foyer via `DangerZone` avec confirmation native `Alert.alert` et `cache.evict`
 
 ## Dev Notes
 
@@ -388,8 +388,18 @@ apps/api/src/app.module.ts                            (modifie — ajout Househo
 apps/web/app/(app)/layout.tsx                         (nouveau)
 apps/web/app/(app)/household/create/page.tsx           (nouveau)
 apps/web/app/(app)/household/page.tsx                  (nouveau)
-apps/mobile/app/(app)/household/create.tsx             (nouveau)
-apps/mobile/app/(tabs)/household.tsx                   (nouveau ou modifie)
+apps/mobile/app/household/create.tsx                          (nouveau)
+apps/mobile/app/index.tsx                                     (modifie — auth gate household check)
+apps/mobile/app/(auth)/verify-otp.tsx                         (modifie — redirect vers / au lieu de /(tabs))
+apps/mobile/app/(tabs)/index.tsx                              (modifie — remplace placeholder par dashboard foyer)
+apps/mobile/app/(tabs)/_layout.tsx                            (modifie — Home → Foyer, Home → House icon)
+apps/mobile/app/_layout.tsx                                   (modifie — ajout household/create Stack.Screen)
+apps/mobile/features/household/graphql.ts                     (nouveau)
+apps/mobile/features/household/constants.ts                   (nouveau)
+apps/mobile/features/household/components/member-avatar.tsx   (nouveau)
+apps/mobile/features/household/components/members-list.tsx    (nouveau)
+apps/mobile/features/household/components/household-name-editor.tsx (nouveau)
+apps/mobile/features/household/components/danger-zone.tsx     (nouveau)
 ```
 
 ### Dependances a installer
@@ -556,3 +566,37 @@ Les mutations `updateHousehold` et `deleteHousehold` n'utilisent pas le `Househo
 - `apps/web/features/household/components/household-name-editor.tsx` — simplifie (retire cache.writeQuery, ajoute router.refresh)
 - `apps/web/features/household/components/danger-zone.tsx` — simplifie (retire useApolloClient, clearStore)
 - `apps/web/features/household/components/household-dashboard.tsx` — supprime (remplace par page.tsx RSC)
+
+#### T7 + T10: Client Mobile — Creation, consultation, update et delete foyer
+
+**Pas de groupe `(app)`** : le story doc prevoyait `app/(app)/household/create.tsx` mais le mobile n'a pas de groupe `(app)`. L'ecran de creation est a la racine : `app/household/create.tsx`, enregistre comme `Stack.Screen` dans `app/_layout.tsx`.
+
+**Dashboard dans `(tabs)/index.tsx`** : pas de nouveau fichier `(tabs)/household.tsx` — le placeholder existant est remplace par le dashboard foyer. Tab renomme Home → Foyer, icone `Home` → `House`.
+
+**Auth gate avec household check** : `app/index.tsx` query `myHousehold` apres la verification de session. Si pas de foyer → redirect vers `/household/create`, sinon → `/(tabs)`. Le `verify-otp.tsx` redirige vers `/` (auth gate) au lieu de `/(tabs)` directement.
+
+**Apollo Client 4.x** : les hooks React (`useQuery`, `useMutation`) s'importent depuis `@apollo/client/react` (pas `@apollo/client`). Les types et fragments depuis `@apollo/client/core`.
+
+**Structure `features/`** : meme pattern que le web — `features/household/graphql.ts` (types, fragments, queries, mutations), `features/household/constants.ts` (labels de roles en francais), `features/household/components/` (composants UI). Le `.gitkeep` de `features/` est supprime.
+
+**Composants RN** : `MemberAvatar` utilise `View` + `Text` avec `style={{ backgroundColor: color }}` au lieu de shadcn `Avatar`. `DangerZone` utilise `Alert.alert` natif au lieu de `AlertDialog` shadcn.
+
+**Cache Apollo mobile** : `refetchQueries: [MY_HOUSEHOLD_QUERY]` pour create/update. `cache.evict({ fieldName: 'myHousehold' })` + `cache.gc()` pour delete (pas de `clearStore` comme le web pre-RSC).
+
+**Couleurs icones SVG** : `react-native-svg` ne supporte pas les couleurs HSL. Les icones lucide utilisent des couleurs hex (`#0a0a0a` / `#fafafa`) au lieu du format HSL utilise dans le tab layout.
+
+### File List
+
+- `apps/mobile/app/household/create.tsx` — nouveau, ecran creation foyer
+- `apps/mobile/app/index.tsx` — modifie, auth gate avec query `myHousehold`
+- `apps/mobile/app/(auth)/verify-otp.tsx` — modifie, redirect vers `/` au lieu de `/(tabs)`
+- `apps/mobile/app/(tabs)/index.tsx` — modifie, remplace placeholder par dashboard foyer
+- `apps/mobile/app/(tabs)/_layout.tsx` — modifie, Home → Foyer, Home → House
+- `apps/mobile/app/_layout.tsx` — modifie, ajout `household-create` Stack.Screen
+- `apps/mobile/features/household/graphql.ts` — nouveau, copie du web
+- `apps/mobile/features/household/constants.ts` — nouveau, labels de roles
+- `apps/mobile/features/household/components/member-avatar.tsx` — nouveau, adaptation RN
+- `apps/mobile/features/household/components/members-list.tsx` — nouveau
+- `apps/mobile/features/household/components/household-name-editor.tsx` — nouveau, edition inline avec Zod
+- `apps/mobile/features/household/components/danger-zone.tsx` — nouveau, suppression avec Alert.alert
+- `apps/mobile/features/.gitkeep` — supprime

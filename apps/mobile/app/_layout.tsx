@@ -18,6 +18,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(modals)" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="household/create" options={{ headerShown: true }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
