@@ -1,31 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { createHouseholdInput } from '@family-hub/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CREATE_HOUSEHOLD_MUTATION, MY_HOUSEHOLD_QUERY } from '../graphql';
+import { CREATE_HOUSEHOLD_MUTATION } from '../graphql';
 
 export function CreateHouseholdForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
-  const { data: existingData, loading: checkingHousehold } = useQuery(MY_HOUSEHOLD_QUERY);
-  const hasHousehold = !!existingData?.myHousehold;
-
   const [createHousehold, { loading }] = useMutation(CREATE_HOUSEHOLD_MUTATION, {
-    update(cache, { data }) {
-      if (data) {
-        cache.writeQuery({
-          query: MY_HOUSEHOLD_QUERY,
-          data: { myHousehold: data.createHousehold },
-        });
-      }
-    },
     onCompleted() {
       router.replace('/household');
     },
@@ -38,16 +27,6 @@ export function CreateHouseholdForm() {
       }
     },
   });
-
-  useEffect(() => {
-    if (hasHousehold) {
-      router.replace('/household');
-    }
-  }, [hasHousehold, router]);
-
-  if (hasHousehold) {
-    return null;
-  }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,16 +42,6 @@ export function CreateHouseholdForm() {
 
     await createHousehold({
       variables: { input: { name: result.data.name } },
-      optimisticResponse: {
-        createHousehold: {
-          __typename: 'Household',
-          id: crypto.randomUUID(),
-          name: result.data.name,
-          membersCount: 1,
-          createdAt: new Date().toISOString(),
-          members: [],
-        },
-      },
     });
   }
 
@@ -91,7 +60,7 @@ export function CreateHouseholdForm() {
           maxLength={100}
           aria-describedby={error ? 'household-error' : undefined}
           aria-invalid={!!error}
-          disabled={loading || checkingHousehold}
+          disabled={loading}
         />
       </div>
 
@@ -101,7 +70,7 @@ export function CreateHouseholdForm() {
         </p>
       )}
 
-      <Button type="submit" className="h-11 w-full" disabled={loading || checkingHousehold}>
+      <Button type="submit" className="h-11 w-full" disabled={loading}>
         {loading ? 'Création en cours…' : 'Créer le foyer'}
       </Button>
     </form>

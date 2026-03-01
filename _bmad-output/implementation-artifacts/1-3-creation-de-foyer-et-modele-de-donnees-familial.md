@@ -488,6 +488,35 @@ Les mutations `updateHousehold` et `deleteHousehold` n'utilisent pas le `Househo
 
 **`AlertDialog` ShadCN** : utilise pour la confirmation de suppression destructive. Le pattern standard ShadCN avec `AlertDialogTrigger`, `AlertDialogContent`, `AlertDialogAction` (variant destructive).
 
+> **Note** : La migration RSC (T11) a supprime le cache Apollo pour les queries (data fetching server-side). Les mutations client conservent `useMutation` mais n'ecrivent plus dans le cache — `router.refresh()` re-declenche le RSC render a la place.
+
+#### T6/T9: Refactoring RSC — Migration Apollo server-side
+
+**Motivation** : les pages household utilisaient `'use client'` pour du simple data fetching (`useQuery` + loading states manuels + redirects via `useEffect`). Migration vers RSC pour : zero JS superflu, pas de spinner initial, redirects server-side instantanes.
+
+**Package `@apollo/client-integration-nextjs`** : fournit `registerApolloClient` (client server-side par requete), `ApolloNextAppProvider` (remplace `ApolloProvider` pour streaming SSR), et re-exporte `ApolloClient`/`InMemoryCache` depuis le package d'integration.
+
+**Server-side (`apollo-server.ts`)** : `registerApolloClient` cree un client frais par requete RSC — les cookies d'auth sont forwardes via `cookies().toString()`. Exporte `query()` (shortcut) et `PreloadQuery` (usage futur avec `useSuspenseQuery`).
+
+**Client-side (`apollo-provider.tsx`)** : `ApolloNextAppProvider` + factory `makeClient` (un client par component tree). Remplace le singleton `ApolloClient` + `ApolloProvider` classique. Le nom d'export `ApolloProvider` est conserve — aucun changement dans les layouts consumers.
+
+**Suppression `apollo-client.ts`** : le singleton est remplace par `apollo-server.ts` (serveur) et `makeClient` dans le provider (client).
+
+**Pages RSC async** :
+- `household/page.tsx` : `await query({ query: MY_HOUSEHOLD_QUERY })` → redirect si pas de foyer → compose `HouseholdNameEditor`, `MembersList`, `DangerZone` avec les donnees en props
+- `household/create/page.tsx` : guard server-side avec try-catch — si l'API est unreachable, le formulaire est affiche quand meme (la mutation echouera avec un message clair)
+
+**`loading.tsx` + `error.tsx`** : conventions Next.js. `error.tsx` est `'use client'` (exigence Next.js), recoit `{ reset }` pour retenter le render. Remplace les `if (loading)` et `if (error)` manuels.
+
+**Simplification composants client** :
+- `create-household-form.tsx` : retire `useQuery` guard, `useEffect` redirect, `update(cache)`, `optimisticResponse`. Garde `useMutation` avec `onCompleted → router.replace('/household')`
+- `household-name-editor.tsx` : retire `cache.writeQuery`. Ajoute `router.refresh()` apres mutation (re-render RSC → re-query serveur)
+- `danger-zone.tsx` : retire `useApolloClient`, `client.clearStore()`. Garde `useMutation` + `router.replace('/household/create')`
+
+**`household-dashboard.tsx` supprime** : la logique (query, loading, error, redirect, composition) est absorbee par `page.tsx` RSC.
+
+**ApolloProvider scope** : deplace de `app/layout.tsx` vers `app/(app)/layout.tsx`. Les pages auth (`/login`, `/verify-otp`) n'embarquent plus Apollo dans leur bundle.
+
 ### File List
 
 - `apps/api/src/common/cls/cls.store.ts` — ajout `extends ClsStore`
@@ -510,3 +539,20 @@ Les mutations `updateHousehold` et `deleteHousehold` n'utilisent pas le `Househo
 - `apps/web/components/ui/alert-dialog.tsx` — nouveau (ShadCN)
 - `apps/web/lib/graphql/household.ts` — ajout mutations `UPDATE_HOUSEHOLD_MUTATION`, `DELETE_HOUSEHOLD_MUTATION`
 - `apps/web/app/(app)/household/household-dashboard.tsx` — ajout edition inline du nom + zone de danger avec suppression
+
+#### T6/T9: Refactoring RSC — Migration Apollo server-side
+
+- `apps/web/package.json` — ajout `@apollo/client-integration-nextjs`
+- `apps/web/lib/apollo-server.ts` — nouveau, client Apollo RSC avec `registerApolloClient` + cookie forwarding
+- `apps/web/lib/apollo-client.ts` — supprime (remplace par apollo-server + provider)
+- `apps/web/components/providers/apollo-provider.tsx` — rewrite `ApolloNextAppProvider` + `makeClient`
+- `apps/web/app/layout.tsx` — retrait `ApolloProvider`
+- `apps/web/app/(app)/layout.tsx` — ajout `ApolloProvider` autour de `{children}`
+- `apps/web/app/(app)/household/page.tsx` — rewrite RSC async avec `query()` + `redirect()`
+- `apps/web/app/(app)/household/create/page.tsx` — rewrite RSC async avec guard try-catch
+- `apps/web/app/(app)/household/loading.tsx` — nouveau, fallback Suspense
+- `apps/web/app/(app)/household/error.tsx` — nouveau, error boundary avec retry
+- `apps/web/features/household/components/create-household-form.tsx` — simplifie (retire useQuery, useEffect, cache, optimistic)
+- `apps/web/features/household/components/household-name-editor.tsx` — simplifie (retire cache.writeQuery, ajoute router.refresh)
+- `apps/web/features/household/components/danger-zone.tsx` — simplifie (retire useApolloClient, clearStore)
+- `apps/web/features/household/components/household-dashboard.tsx` — supprime (remplace par page.tsx RSC)

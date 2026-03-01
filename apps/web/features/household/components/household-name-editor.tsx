@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation } from '@apollo/client/react';
 import { updateHouseholdInput } from '@family-hub/shared';
 import { Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MY_HOUSEHOLD_QUERY, UPDATE_HOUSEHOLD_MUTATION } from '../graphql';
+import { UPDATE_HOUSEHOLD_MUTATION } from '../graphql';
 
 interface HouseholdNameEditorProps {
   name: string;
 }
 
 export function HouseholdNameEditor({ name }: HouseholdNameEditorProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
@@ -48,17 +50,10 @@ export function HouseholdNameEditor({ name }: HouseholdNameEditorProps) {
     try {
       await updateHousehold({
         variables: { input: { name: result.data.name } },
-        update(cache, { data: mutationData }) {
-          if (mutationData?.updateHousehold) {
-            cache.writeQuery({
-              query: MY_HOUSEHOLD_QUERY,
-              data: { myHousehold: mutationData.updateHousehold },
-            });
-          }
-        },
       });
       setIsEditing(false);
       setEditError(null);
+      router.refresh();
     } catch {
       setEditError('Seul le propriétaire peut renommer le foyer.');
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,11 @@ interface DangerZoneProps {
 
 export function DangerZone({ householdName }: DangerZoneProps) {
   const router = useRouter();
-  const client = useApolloClient();
   const [deleteHousehold, { loading: deleting }] = useMutation(DELETE_HOUSEHOLD_MUTATION);
 
   async function handleDelete() {
     try {
       await deleteHousehold();
-      await client.clearStore();
       router.replace('/household/create');
     } catch {
       // The AlertDialog will close; error is shown via a toast or ignored for MVP
