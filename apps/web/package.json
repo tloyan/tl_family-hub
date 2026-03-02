@@ -31,7 +31,7 @@
     "@family-hub/config-eslint": "workspace:*",
     "@family-hub/config-ts": "workspace:*",
     "@tailwindcss/postcss": "^4.2.1",
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.3.3",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
