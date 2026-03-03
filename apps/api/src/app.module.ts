@@ -2,15 +2,21 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
+import { ClsModule } from 'nestjs-cls';
 import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { HealthModule } from './modules/health/health.module';
+import { HouseholdModule } from './modules/household/household.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { createAuth } from './lib/auth';
 
 @Module({
   imports: [
+    ClsModule.forRoot({
+      global: true,
+      guard: { mount: true },
+    }),
     LoggerModule.forRoot({
       pinoHttp: {
         transport:
@@ -28,10 +34,11 @@ import { createAuth } from './lib/auth';
     AuthModule.forRootAsync({
       inject: [PrismaService],
       useFactory: (prisma: PrismaService) => ({
-        auth: createAuth(prisma),
+        auth: createAuth(prisma.bypassHouseholdFilter()),
       }),
     }),
     HealthModule,
+    HouseholdModule,
   ],
 })
 export class AppModule {}

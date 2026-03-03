@@ -1,0 +1,61 @@
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum HouseholdRole {
+  OWNER
+  ADMIN
+  ADULT
+  CHILD
+  PROVIDER
+}
+
+enum CircleType {
+  PERSONAL
+  COUPLE
+  HOUSEHOLD
+  EXTENDED_FAMILY
+  ACQUAINTANCES
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Household {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members HouseholdMember[]
+  circles Circle[]
+
+  @@map("households")
+}
+
+model HouseholdMember {
+  id          String        @id @default(uuid()) @db.Uuid
+  role        HouseholdRole
+  color       String        @db.VarChar(7)
+  version     Int           @default(1)
+  joinedAt    DateTime      @default(now()) @map("joined_at")
+  userId      String        @map("user_id")
+  householdId String        @map("household_id") @db.Uuid
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, householdId])
+  @@index([householdId])
+  @@index([userId])
+  @@map("household_members")
+}
+
+model Circle {
+  id          String     @id @default(uuid()) @db.Uuid
+  type        CircleType
+  householdId String     @map("household_id") @db.Uuid
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, type])
+  @@map("circles")
+}

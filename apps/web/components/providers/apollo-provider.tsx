@@ -1,8 +1,23 @@
 'use client';
 
-import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
-import { apolloClient } from '@/lib/apollo-client';
+import { HttpLink } from '@apollo/client';
+import {
+  ApolloNextAppProvider,
+  ApolloClient,
+  InMemoryCache,
+} from '@apollo/client-integration-nextjs';
+
+function makeClient() {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new HttpLink({
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- provided by Doppler, absence = visible runtime error
+      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
+      credentials: 'include',
+    }),
+  });
+}
 
 export function ApolloProvider({ children }: { children: React.ReactNode }) {
-  return <BaseApolloProvider client={apolloClient}>{children}</BaseApolloProvider>;
+  return <ApolloNextAppProvider makeClient={makeClient}>{children}</ApolloNextAppProvider>;
 }

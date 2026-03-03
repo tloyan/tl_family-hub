@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.0.0",
+    "@apollo/client-integration-nextjs": "^0.14.4",
     "@family-hub/shared": "workspace:*",
     "@family-hub/tokens": "workspace:*",
     "better-auth": "^1.4.18",

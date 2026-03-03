@@ -49,7 +49,7 @@ export default function VerifyOtpScreen() {
           return;
         }
 
-        router.replace('/(tabs)');
+        router.replace('/');
       } catch {
         setError('Une erreur est survenue. Veuillez reessayer.');
         setOtp('');

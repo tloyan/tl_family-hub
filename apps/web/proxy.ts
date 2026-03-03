@@ -14,10 +14,10 @@ export function proxy(request: NextRequest) {
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
   if (isAuthenticated && isAuthRoute) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/household', request.url));
   }
 
-  if (!isAuthenticated && !isAuthRoute && pathname !== '/') {
+  if (!isAuthenticated && !isAuthRoute) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

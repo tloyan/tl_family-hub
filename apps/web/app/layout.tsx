@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { ApolloProvider } from '@/components/providers/apollo-provider';
 import './globals.css';
 
 const inter = Inter({
@@ -20,9 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${inter.variable} antialiased`}>
-        <ApolloProvider>{children}</ApolloProvider>
-      </body>
+      <body className={`${inter.variable} antialiased`}>{children}</body>
     </html>
   );
 }
