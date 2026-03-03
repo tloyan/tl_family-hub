@@ -1,6 +1,6 @@
 # Story 1.3: Creation de foyer et modele de donnees familial
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,7 +57,7 @@ so that je puisse commencer a organiser ma famille.
 - [x] T1.3: Definir les 5 cercles comme enum `CircleType` : `PERSONAL`, `COUPLE`, `HOUSEHOLD`, `EXTENDED_FAMILY`, `ACQUAINTANCES`
 - [x] T1.4: Definir l'enum `HouseholdRole` : `OWNER`, `ADMIN`, `ADULT`, `CHILD`, `PROVIDER`
 - [x] T1.5: Ajouter le champ `color` (String) sur `HouseholdMember` pour la couleur automatique
-- [x] T1.6: Ajouter le champ `version` (Int, default 1) sur `Household` et `HouseholdMember` pour l'Optimistic Concurrency Control
+- [ ] T1.6: Ajouter le champ `version` (Int, default 1) sur `Household` et `HouseholdMember` pour l'Optimistic Concurrency Control — **REPORTED**: champ `version` ajouté en DB mais mécanisme OCC non implémenté (pas de check/incrément version dans repository/service/DTOs). Reporter à une story dédiée.
 - [x] T1.7: Generer et appliquer la migration Prisma (`prisma migrate dev --name household_family_model`)
 - [x] T1.8: Verifier la compatibilite avec les schemas `base.prisma` et `auth.prisma` existants
 
@@ -111,11 +111,11 @@ so that je puisse commencer a organiser ma famille.
 
 ### T8: Tests (AC: 3, 5)
 
-- [ ] T8.1: Tests unitaires du `HouseholdService` (Vitest) — creation foyer, attribution role owner, generation couleur, creation des 5 cercles
-- [ ] T8.2: Tests unitaires du Prisma Client Extension (Vitest) — verification que le filtre `householdId` est injecte correctement
-- [ ] T8.3: Tests d'integration (Supertest) — flux complet : auth → createHousehold → myHousehold → verification isolation cross-foyer
-- [ ] T8.4: Test d'isolation cross-foyer automatise — creer 2 foyers, verifier qu'un user du foyer A ne peut pas voir les donnees du foyer B
-- [ ] T8.5: Ajouter les variables necessaires au workflow CI si besoin
+- [x] T8.1: Tests unitaires du `HouseholdService` (Vitest) — creation foyer, attribution role owner, generation couleur, creation des 5 cercles
+- [x] T8.2: Tests unitaires du Prisma Client Extension (Vitest) — verification que le filtre `householdId` est injecte correctement
+- [x] T8.3: Tests d'integration (Supertest) — flux complet : auth → createHousehold → myHousehold → verification isolation cross-foyer
+- [x] T8.4: Test d'isolation cross-foyer automatise — creer 2 foyers, verifier qu'un user du foyer A ne peut pas voir les donnees du foyer B
+- [x] T8.5: Ajouter les variables necessaires au workflow CI si besoin
 
 ### T9: Update/Delete foyer — Backend + Frontend Web (AC: 1, 4)
 
@@ -600,3 +600,87 @@ Les mutations `updateHousehold` et `deleteHousehold` n'utilisent pas le `Househo
 - `apps/mobile/features/household/components/household-name-editor.tsx` — nouveau, edition inline avec Zod
 - `apps/mobile/features/household/components/danger-zone.tsx` — nouveau, suppression avec Alert.alert
 - `apps/mobile/features/.gitkeep` — supprime
+
+#### T1: Schema Prisma (ajouté par review)
+
+- `packages/db/prisma/schema/household.prisma` — nouveau, modeles Household, HouseholdMember, Circle + enums
+- `packages/db/prisma/schema/auth.prisma` — modifie, ajout relation `members HouseholdMember[]` sur User
+- `packages/db/prisma/migrations/20260227083932_household_family_model/migration.sql` — nouveau, migration
+- `packages/db/prisma/migrations/migration_lock.toml` — modifie
+
+#### T2: Shared Types (ajouté par review)
+
+- `packages/shared/src/enums/household.ts` — nouveau, enums HouseholdRole et CircleType
+- `packages/shared/src/enums/index.ts` — modifie, export household enums
+- `packages/shared/src/schemas/household.schema.ts` — nouveau, Zod schemas
+- `packages/shared/src/schemas/index.ts` — modifie, export household schemas
+- `packages/shared/src/constants/household.ts` — nouveau, palette couleurs + getNextColor
+- `packages/shared/src/constants/index.ts` — modifie, export household constants
+
+#### T4: Module NestJS Household (ajouté par review)
+
+- `apps/api/src/modules/household/household.module.ts` — nouveau
+- `apps/api/src/modules/household/household.model.ts` — nouveau, @ObjectType GraphQL
+- `apps/api/src/modules/household/household.dto.ts` — nouveau
+- `apps/api/src/modules/household/household.service.ts` — nouveau
+- `apps/api/src/modules/household/household.repository.ts` — nouveau
+- `apps/api/src/modules/household/household.resolver.ts` — nouveau
+
+#### T8: Tests (ajouté par review)
+
+- `apps/api/src/common/decorators/__tests__/current-household.decorator.spec.ts` — nouveau
+- `apps/api/src/common/guards/__tests__/household.guard.spec.ts` — nouveau
+- `apps/api/src/common/prisma/__tests__/household-extension.spec.ts` — nouveau
+- `apps/api/src/modules/health/__tests__/health.controller.spec.ts` — nouveau
+- `apps/api/src/modules/health/__tests__/health.resolver.spec.ts` — nouveau
+- `apps/api/src/modules/household/__tests__/household.repository.spec.ts` — nouveau
+- `apps/api/src/modules/household/__tests__/household.resolver.spec.ts` — nouveau
+- `apps/api/src/modules/household/__tests__/household.service.spec.ts` — nouveau
+- `apps/api/src/modules/prisma/__tests__/prisma.service.spec.ts` — nouveau
+- `apps/api/test/helpers/auth.helper.ts` — nouveau
+- `apps/api/test/helpers/db.helper.ts` — nouveau
+- `apps/api/test/household.e2e-spec.ts` — nouveau
+- `apps/api/vitest.config.ts` — modifie
+
+#### Autres fichiers (ajouté par review)
+
+- `apps/api/package.json` — modifie, ajout dependencies
+- `apps/web/components/member-avatar.tsx` — nouveau
+- `apps/web/components/ui/avatar.tsx` — nouveau (ShadCN)
+- `apps/web/features/household/constants.ts` — nouveau
+- `apps/web/app/page.tsx` — modifie
+- `apps/web/proxy.ts` — modifie
+- `package.json` — modifie
+- `sonar-project.properties` — modifie
+- `.pnpm-approve-builds.json` — modifie
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Thomas — 2026-03-03
+**Outcome:** Approved (done)
+
+#### Review Follow-ups — Reported (stories futures)
+
+- [ ] [H2][HIGH] **OCC non implémenté** — Champ `version` en DB mais mécanisme absent (pas de check/incrément). T1.6 décoché. Créer story dédiée OCC end-to-end.
+- [ ] [M1][MEDIUM] **Mutualiser GraphQL types/constants** — `graphql.ts` et `constants.ts` dupliqués entre web et mobile (123 + 9 lignes identiques). Déplacer dans `packages/shared`. Prochaine story.
+
+#### Review Follow-ups — Action items (cette story)
+
+- [x] [H3][HIGH] **Zod `.parse()` → exception custom** — `household.service.ts:24,51` lance ZodError brut. Utiliser `.safeParse()` + `HouseholdNameInvalidException`.
+- [x] [L3][LOW] **Logging structuré manquant** — `HouseholdService`, `HouseholdGuard`, `HouseholdRepository` sans `Logger` NestJS.
+
+#### L3: Logging structuré — Approche retenue
+
+Ajout ciblé de `Logger` NestJS sur `HouseholdService` et `HouseholdGuard` uniquement. `HouseholdRepository` n'a pas de logger — Prisma couvre déjà le logging des opérations DB (query events avec SQL et durées).
+
+**Principe : ne logger que ce qui a une valeur opérationnelle.**
+
+`HouseholdService` :
+- `log` après create/update/delete — événements métier significatifs (audit trail)
+- `warn` sur tentatives non-owner (update/delete) — détection d'abus de sécurité
+- Pas de warn sur validation banale (nom invalide, foyer déjà existant) — erreur utilisateur courante, pas un signal opérationnel
+
+`HouseholdGuard` :
+- `warn` sur accès refusé (membership check failed) — échec de sécurité
+- Pas de warn sur header manquant — client mal configuré, pas une alerte
+- Pas de debug sur happy path — chaque requête authentifiée générerait du bruit inutile

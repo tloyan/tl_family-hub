@@ -1,4 +1,4 @@
-import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import { Injectable, Logger, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { ClsService } from 'nestjs-cls';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
@@ -11,6 +11,8 @@ import { PrismaService } from '../../modules/prisma/prisma.service';
 
 @Injectable()
 export class HouseholdGuard implements CanActivate {
+  private readonly logger = new Logger(HouseholdGuard.name);
+
   constructor(
     private readonly cls: ClsService<AppClsStore>,
     private readonly prisma: PrismaService,
@@ -22,11 +24,11 @@ export class HouseholdGuard implements CanActivate {
     }>();
 
     const householdId = gqlContext.req.headers['x-household-id'];
+    const userId = gqlContext.req.session.user.id;
+
     if (!householdId) {
       throw new HouseholdHeaderMissingException();
     }
-
-    const userId = gqlContext.req.session.user.id;
 
     const member = await this.prisma.bypassHouseholdFilter().householdMember.findFirst({
       where: { userId, householdId },
@@ -34,6 +36,7 @@ export class HouseholdGuard implements CanActivate {
     });
 
     if (!member) {
+      this.logger.warn('Household access denied', { userId, householdId });
       throw new HouseholdAccessDeniedException();
     }
 

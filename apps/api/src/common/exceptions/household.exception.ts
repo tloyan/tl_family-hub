@@ -29,6 +29,12 @@ export class HouseholdHeaderMissingException extends BadRequestException {
   }
 }
 
+export class HouseholdNameInvalidException extends BadRequestException {
+  constructor() {
+    super({ code: 'HOUSEHOLD_NAME_INVALID', message: 'Household name is invalid' });
+  }
+}
+
 export class NotHouseholdOwnerException extends ForbiddenException {
   constructor() {
     super({

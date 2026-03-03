@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
 import {
   CircleType,
@@ -10,6 +10,7 @@ import {
 import {
   HouseholdNotFoundException,
   HouseholdAlreadyExistsException,
+  HouseholdNameInvalidException,
   NotHouseholdOwnerException,
 } from '../../common/exceptions/household.exception';
 import { HouseholdRepository } from './household.repository';
@@ -18,10 +19,16 @@ import type { CreateHouseholdInput, UpdateHouseholdInput } from './household.dto
 
 @Injectable()
 export class HouseholdService {
+  private readonly logger = new Logger(HouseholdService.name);
+
   constructor(private readonly householdRepository: HouseholdRepository) {}
 
   async create(userId: string, input: CreateHouseholdInput): Promise<HouseholdModel> {
-    const parsed = createHouseholdInput.parse({ name: input.name });
+    const result = createHouseholdInput.safeParse({ name: input.name });
+    if (!result.success) {
+      throw new HouseholdNameInvalidException();
+    }
+    const parsed = result.data;
 
     const existing = await this.householdRepository.findByUserId(userId);
     if (existing) {
@@ -36,6 +43,7 @@ export class HouseholdService {
       circles: Object.values(CircleType),
     });
 
+    this.logger.log('Household created', { householdId: household.id, userId });
     return this.toModel(household);
   }
 
@@ -48,7 +56,11 @@ export class HouseholdService {
   }
 
   async update(userId: string, input: UpdateHouseholdInput): Promise<HouseholdModel> {
-    const parsed = updateHouseholdInput.parse({ name: input.name });
+    const result = updateHouseholdInput.safeParse({ name: input.name });
+    if (!result.success) {
+      throw new HouseholdNameInvalidException();
+    }
+    const parsed = result.data;
 
     const household = await this.householdRepository.findByUserId(userId);
     if (!household) {
@@ -57,10 +69,15 @@ export class HouseholdService {
 
     const member = household.members.find((m) => m.userId === userId);
     if (member?.role !== HouseholdRole.OWNER) {
+      this.logger.warn('Non-owner attempted household update', {
+        userId,
+        householdId: household.id,
+      });
       throw new NotHouseholdOwnerException();
     }
 
     const updated = await this.householdRepository.update(household.id, { name: parsed.name });
+    this.logger.log('Household updated', { householdId: household.id, userId });
     return this.toModel(updated);
   }
 
@@ -72,10 +89,15 @@ export class HouseholdService {
 
     const member = household.members.find((m) => m.userId === userId);
     if (member?.role !== HouseholdRole.OWNER) {
+      this.logger.warn('Non-owner attempted household deletion', {
+        userId,
+        householdId: household.id,
+      });
       throw new NotHouseholdOwnerException();
     }
 
     await this.householdRepository.delete(household.id);
+    this.logger.log('Household deleted', { householdId: household.id, userId });
     return true;
   }
 

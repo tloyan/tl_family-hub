@@ -4,6 +4,7 @@ import { HouseholdService } from '../household.service';
 import { HouseholdRepository } from '../household.repository';
 import {
   HouseholdAlreadyExistsException,
+  HouseholdNameInvalidException,
   HouseholdNotFoundException,
   NotHouseholdOwnerException,
 } from '../../../common/exceptions/household.exception';
@@ -79,17 +80,15 @@ describe('HouseholdService', () => {
       );
     });
 
-    it('throws ZodError on empty name', async () => {
-      await expect(service.create('user-1', { name: '' })).rejects.toHaveProperty(
-        'name',
-        'ZodError',
+    it('throws HouseholdNameInvalidException on empty name', async () => {
+      await expect(service.create('user-1', { name: '' })).rejects.toThrow(
+        HouseholdNameInvalidException,
       );
     });
 
-    it('throws ZodError on name > 100 chars', async () => {
-      await expect(service.create('user-1', { name: 'a'.repeat(101) })).rejects.toHaveProperty(
-        'name',
-        'ZodError',
+    it('throws HouseholdNameInvalidException on name > 100 chars', async () => {
+      await expect(service.create('user-1', { name: 'a'.repeat(101) })).rejects.toThrow(
+        HouseholdNameInvalidException,
       );
     });
 
@@ -202,17 +201,15 @@ describe('HouseholdService', () => {
       );
     });
 
-    it('throws ZodError on empty name', async () => {
-      await expect(service.update('user-1', { name: '' })).rejects.toHaveProperty(
-        'name',
-        'ZodError',
+    it('throws HouseholdNameInvalidException on empty name', async () => {
+      await expect(service.update('user-1', { name: '' })).rejects.toThrow(
+        HouseholdNameInvalidException,
       );
     });
 
-    it('throws ZodError on name > 100 chars', async () => {
-      await expect(service.update('user-1', { name: 'a'.repeat(101) })).rejects.toHaveProperty(
-        'name',
-        'ZodError',
+    it('throws HouseholdNameInvalidException on name > 100 chars', async () => {
+      await expect(service.update('user-1', { name: 'a'.repeat(101) })).rejects.toThrow(
+        HouseholdNameInvalidException,
       );
     });
   });
