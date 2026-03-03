@@ -44,6 +44,7 @@ RUN addgroup --system --gid 1001 nestjs && \
 COPY --from=prod-deps --chown=nestjs:nestjs /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=nestjs:nestjs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=prod-deps --chown=nestjs:nestjs /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=prod-deps --chown=nestjs:nestjs /app/packages/shared/node_modules ./packages/shared/node_modules
 
 # Copy built API
 COPY --from=builder --chown=nestjs:nestjs /app/apps/api/dist ./apps/api/dist
