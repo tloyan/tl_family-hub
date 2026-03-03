@@ -197,7 +197,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build workspace packages
-        run: pnpm --filter @family-hub/tokens build
+        run: pnpm --filter @family-hub/tokens --filter @family-hub/shared build
 
       - name: Setup EAS
         uses: expo/expo-github-action@v8
