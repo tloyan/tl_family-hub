@@ -45,7 +45,14 @@
       }
     },
     "onlyBuiltDependencies": [
-      "@swc/core"
+      "@apollo/protobufjs",
+      "@nestjs/core",
+      "@prisma/engines",
+      "@swc/core",
+      "esbuild",
+      "expo-modules-core",
+      "prisma",
+      "sharp"
     ]
   }
 }
