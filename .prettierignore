@@ -10,4 +10,6 @@ pnpm-lock.yaml
 _bmad
 _bmad-output
 .claude
-src/generated
+**/src/generated
+expo-env.d.ts
+next-env.d.ts
