@@ -1,0 +1,37 @@
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model Invitation {
+  id                    String           @id @default(uuid()) @db.Uuid
+  token                 String           @unique @db.VarChar(64)
+  role                  HouseholdRole
+  relation              String           @db.VarChar(50)
+  status                InvitationStatus @default(PENDING)
+  email                 String?          @db.VarChar(255)
+  expiresAt             DateTime         @map("expires_at")
+  acceptedAt            DateTime?        @map("accepted_at")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+  householdId           String           @map("household_id") @db.Uuid
+  invitedByUserId       String           @map("invited_by_user_id")
+  acceptedByUserId      String?          @map("accepted_by_user_id")
+  linkedMemberProfileId String?          @unique @map("linked_member_profile_id") @db.Uuid
+
+  household           Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  invitedBy           User             @relation("InvitedBy", fields: [invitedByUserId], references: [id])
+  acceptedBy          User?            @relation("AcceptedBy", fields: [acceptedByUserId], references: [id])
+  linkedMemberProfile HouseholdMember? @relation(fields: [linkedMemberProfileId], references: [id])
+
+  @@index([householdId])
+  @@index([token])
+  @@index([status])
+  @@map("invitations")
+}

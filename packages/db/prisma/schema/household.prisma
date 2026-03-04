@@ -25,8 +25,9 @@ model Household {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  members HouseholdMember[]
-  circles Circle[]
+  members     HouseholdMember[]
+  circles     Circle[]
+  invitations Invitation[]
 
   @@map("households")
 }
@@ -40,8 +41,9 @@ model HouseholdMember {
   userId      String        @map("user_id")
   householdId String        @map("household_id") @db.Uuid
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  household  Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  invitation Invitation?
 
   @@unique([userId, householdId])
   @@index([householdId])

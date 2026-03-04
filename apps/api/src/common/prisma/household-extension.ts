@@ -3,7 +3,8 @@ import { Prisma } from '@family-hub/db';
 const HOUSEHOLD_SCOPED_MODELS = new Set<string>([
   'HouseholdMember',
   'Circle',
-  // Future: 'Ritual', 'Invitation', etc.
+  'Invitation',
+  // Future: 'Ritual', etc.
 ]);
 
 const FILTERABLE_OPERATIONS = new Set<string>([
