@@ -135,11 +135,11 @@ And le token expire apres la duree configuree
   - [x] T2.3: Creer `packages/shared/src/constants/invitation.ts` — `INVITATION_EXPIRY_DAYS` (7), `MAX_PENDING_INVITATIONS_PER_HOUSEHOLD`
   - [x] T2.4: Re-exporter depuis les fichiers index.ts
 
-- [ ] T3: Email — Template d'invitation (AC: 1, 8)
-  - [ ] T3.1: Creer `packages/emails/src/templates/invitation.ts` — template HTML (pattern OTP existant)
-  - [ ] T3.2: Parametres : `inviterName`, `householdName`, `relation`, `invitationLink`
-  - [ ] T3.3: Creer `packages/emails/src/templates/invitation.spec.ts` — tests du rendu
-  - [ ] T3.4: Re-exporter depuis `packages/emails/src/index.ts`
+- [x] T3: Email — Template d'invitation (AC: 1, 8)
+  - [x] T3.1: Creer `packages/emails/src/templates/invitation.ts` — template HTML (pattern OTP existant)
+  - [x] T3.2: Parametres : `inviterName`, `householdName`, `relation`, `invitationLink`
+  - [x] T3.3: Creer `packages/emails/src/templates/invitation.spec.ts` — tests du rendu
+  - [x] T3.4: Re-exporter depuis `packages/emails/src/index.ts`
 
 - [ ] T4: Infrastructure temps reel — PubSub + WebSocket (AC: 3, 5, 9)
   - [ ] T4.1: Installer `graphql-ws` + `graphql-redis-subscriptions` + `ioredis` dans `apps/api`
