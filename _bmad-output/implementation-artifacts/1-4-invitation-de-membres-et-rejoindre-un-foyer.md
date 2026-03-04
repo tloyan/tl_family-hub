@@ -1,6 +1,6 @@
 # Story 1.4: Invitation de membres et rejoindre un foyer
 
-Status: ready-for-dev
+Status: in-progress
 Story-ID: 1.4
 Epic: 1 — Fondation, Authentification & Foyer familial
 Date: 2026-03-03
@@ -129,11 +129,11 @@ And le token expire apres la duree configuree
   - [x] T1.4: Generer et appliquer la migration Prisma (`npx prisma migrate dev`)
   - [x] T1.5: Ajouter `'Invitation'` a `HOUSEHOLD_SCOPED_MODELS` dans `household-extension.ts`
 
-- [ ] T2: Package shared — Enums, schemas Zod, constantes (AC: 1, 10)
-  - [ ] T2.1: Creer `packages/shared/src/enums/invitation.ts` — `INVITATION_STATUS`, `INVITATION_RELATION`
-  - [ ] T2.2: Creer `packages/shared/src/schemas/invitation.schema.ts` — schemas Zod pour `createInvitationInput`, `acceptInvitationInput`
-  - [ ] T2.3: Creer `packages/shared/src/constants/invitation.ts` — `INVITATION_EXPIRY_DAYS` (7), `MAX_PENDING_INVITATIONS_PER_HOUSEHOLD`
-  - [ ] T2.4: Re-exporter depuis les fichiers index.ts
+- [x] T2: Package shared — Enums, schemas Zod, constantes (AC: 1, 10)
+  - [x] T2.1: Creer `packages/shared/src/enums/invitation.ts` — `INVITATION_STATUS`, `INVITATION_RELATION`
+  - [x] T2.2: Creer `packages/shared/src/schemas/invitation.schema.ts` — schemas Zod pour `createInvitationInput`, `acceptInvitationInput`
+  - [x] T2.3: Creer `packages/shared/src/constants/invitation.ts` — `INVITATION_EXPIRY_DAYS` (7), `MAX_PENDING_INVITATIONS_PER_HOUSEHOLD`
+  - [x] T2.4: Re-exporter depuis les fichiers index.ts
 
 - [ ] T3: Email — Template d'invitation (AC: 1, 8)
   - [ ] T3.1: Creer `packages/emails/src/templates/invitation.ts` — template HTML (pattern OTP existant)
