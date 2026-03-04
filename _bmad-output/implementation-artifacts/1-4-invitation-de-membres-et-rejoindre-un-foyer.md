@@ -141,12 +141,12 @@ And le token expire apres la duree configuree
   - [x] T3.3: Creer `packages/emails/src/templates/invitation.spec.ts` — tests du rendu
   - [x] T3.4: Re-exporter depuis `packages/emails/src/index.ts`
 
-- [ ] T4: Infrastructure temps reel — PubSub + WebSocket (AC: 3, 5, 9)
-  - [ ] T4.1: Installer `graphql-ws` + `graphql-redis-subscriptions` + `ioredis` dans `apps/api`
-  - [ ] T4.2: Configurer Apollo Server 5 avec `graphql-ws` WebSocket transport dans `app.module.ts`
-  - [ ] T4.3: Creer `apps/api/src/common/pubsub/pubsub.module.ts` — module global PubSub avec Redis backend (Upstash)
-  - [ ] T4.4: Creer `apps/api/src/common/pubsub/pubsub.service.ts` — wrapper PubSub injectable avec topics types
-  - [ ] T4.5: Configurer l'authentification WebSocket (token session dans `connectionParams`, validation a la connexion)
+- [x] T4: Infrastructure temps reel — PubSub + WebSocket (AC: 3, 5, 9)
+  - [x] T4.1: Installer `graphql-redis-subscriptions` + `ioredis` dans `apps/api` (`graphql-ws` bundled par `@nestjs/graphql@13`)
+  - [x] T4.2: Configurer Apollo Server 5 avec `graphql-ws` WebSocket transport dans `app.module.ts`
+  - [x] T4.3: Creer `apps/api/src/common/pubsub/pubsub.module.ts` — module global PubSub avec Redis backend
+  - [x] T4.4: Creer `apps/api/src/common/pubsub/pubsub.service.ts` — wrapper PubSub injectable (topics `string`, pas de couplage metier)
+  - [x] T4.5: Configurer l'authentification WebSocket (token session dans `connectionParams`, validation via `bearer()` plugin + `authService.api.getSession()`)
 
 - [ ] T5: API Backend — Module invitation + subscriptions (AC: 1-5, 7, 9, 10)
   - [ ] T5.1: Creer `invitation.model.ts` — `@ObjectType()` GraphQL (`Invitation`, `InvitationStatus`)

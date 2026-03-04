@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { emailOTP } from 'better-auth/plugins';
+import { bearer, emailOTP } from 'better-auth/plugins';
 import { expo } from '@better-auth/expo';
 import type { PrismaClient } from '@family-hub/db';
 import { renderOtpEmail } from '@family-hub/emails';
@@ -53,6 +53,7 @@ export function createAuth(prisma: PrismaClient) {
         },
       }),
       expo(),
+      bearer(),
     ],
     rateLimit: {
       window: 60,
