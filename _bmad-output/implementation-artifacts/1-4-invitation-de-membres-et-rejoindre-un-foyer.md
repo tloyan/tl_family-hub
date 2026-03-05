@@ -166,11 +166,11 @@ And le token expire apres la duree configuree
   - [x] T5.8: Ajouter subscription `householdMemberChanged(householdId)` dans `household.resolver.ts` (retro Story 1.3)
   - [x] T5.9: Publier `HOUSEHOLD_MEMBER_CHANGED` depuis `household.service.ts` lors de la creation du foyer (retro 1.3)
 
-- [ ] T6: Tests unitaires backend (AC: tous)
-  - [ ] T6.1: `__tests__/invitation.service.spec.ts` — creation, acceptation (3 cas), annulation, expiration, limites, publish events
-  - [ ] T6.2: `__tests__/invitation.resolver.spec.ts` — delegation vers le service + subscriptions (subscribe au bon topic)
-  - [ ] T6.3: `__tests__/invitation.repository.spec.ts` — appels Prisma
-  - [ ] T6.4: `common/pubsub/__tests__/pubsub.service.spec.ts` — publish et subscribe
+- [x] T6: Tests unitaires backend (AC: tous)
+  - [x] T6.1: `__tests__/invitation.service.spec.ts` — creation, acceptation (3 cas), annulation, expiration, limites, publish events
+  - [x] T6.2: `__tests__/invitation.resolver.spec.ts` — delegation vers le service + subscriptions (subscribe au bon topic)
+  - [x] T6.3: `__tests__/invitation.repository.spec.ts` — appels Prisma
+  - [x] T6.4: `common/pubsub/__tests__/pubsub.service.spec.ts` — publish et subscribe
 
 - [ ] T7: Frontend Web + Subscriptions — Flow d'invitation (AC: 1-5, 7-9)
   - [ ] T7.1: Creer `apps/web/features/household/graphql.ts` — ajouter queries, mutations, subscriptions invitation
