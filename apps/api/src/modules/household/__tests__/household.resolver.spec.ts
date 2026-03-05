@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HouseholdResolver } from '../household.resolver';
 import { HouseholdService } from '../household.service';
+import type { PubSubService } from '../../../common/pubsub';
 import { HouseholdAccessDeniedException } from '../../../common/exceptions/household.exception';
 import type { CreateHouseholdInput, UpdateHouseholdInput } from '../household.dto';
 import type { UserSession } from '@thallesp/nestjs-better-auth';
@@ -13,6 +14,11 @@ const mockService = {
   findById: vi.fn(),
 };
 
+const mockPubSub = {
+  publish: vi.fn().mockResolvedValue(undefined),
+  asyncIterableIterator: vi.fn(),
+};
+
 describe('HouseholdResolver', () => {
   let resolver: HouseholdResolver;
 
@@ -20,7 +26,10 @@ describe('HouseholdResolver', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    resolver = new HouseholdResolver(mockService as unknown as HouseholdService);
+    resolver = new HouseholdResolver(
+      mockService as unknown as HouseholdService,
+      mockPubSub as unknown as PubSubService,
+    );
   });
 
   describe('createHousehold', () => {

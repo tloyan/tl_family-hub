@@ -148,23 +148,23 @@ And le token expire apres la duree configuree
   - [x] T4.4: Creer `apps/api/src/common/pubsub/pubsub.service.ts` — wrapper PubSub injectable (topics `string`, pas de couplage metier)
   - [x] T4.5: Configurer l'authentification WebSocket (token session dans `connectionParams`, validation via `bearer()` plugin + `authService.api.getSession()`)
 
-- [ ] T5: API Backend — Module invitation + subscriptions (AC: 1-5, 7, 9, 10)
-  - [ ] T5.1: Creer `invitation.model.ts` — `@ObjectType()` GraphQL (`Invitation`, `InvitationStatus`)
-  - [ ] T5.2: Creer `invitation.dto.ts` — `@InputType()` (`CreateInvitationInput`, `AcceptInvitationInput`)
-  - [ ] T5.3: Creer `invitation.repository.ts` — acces Prisma (create, findByToken, findByHousehold, update status)
-  - [ ] T5.4: Creer `invitation.service.ts` — logique metier :
+- [x] T5: API Backend — Module invitation + subscriptions (AC: 1-5, 7, 9, 10)
+  - [x] T5.1: Creer `invitation.model.ts` — `@ObjectType()` GraphQL (`Invitation`, `InvitationStatus`)
+  - [x] T5.2: Creer `invitation.dto.ts` — `@InputType()` (`CreateInvitationInput`, `AcceptInvitationInput`)
+  - [x] T5.3: Creer `invitation.repository.ts` — acces Prisma (create, findByToken, findByHousehold, update status)
+  - [x] T5.4: Creer `invitation.service.ts` — logique metier :
     - `createInvitation()` : validation role OWNER/ADMIN, verification limite membres, generation token (`crypto.randomBytes(32).toString('base64url')`), creation en DB, envoi email (Resend)
     - `acceptInvitation()` : validation token (existe, PENDING, non expire), creation HouseholdMember OU liaison profil existant, update statut ACCEPTED, publish events (`INVITATION_ACCEPTED` + `HOUSEHOLD_MEMBER_CHANGED`)
     - `cancelInvitation()` : validation owner, update statut CANCELLED
     - `listInvitations()` : invitations du foyer courant
     - `getInvitationByToken()` : query publique pour l'ecran d'invitation (@AllowAnonymous)
-  - [ ] T5.5: Creer `invitation.resolver.ts` — mutations, queries GraphQL + subscriptions :
+  - [x] T5.5: Creer `invitation.resolver.ts` — mutations, queries GraphQL + subscriptions :
     - Subscription `invitationAccepted(householdId)` — notifie l'admin quand un invite rejoint
     - Subscription `householdMemberChanged(householdId)` — notifie tous les membres
-  - [ ] T5.6: Creer `apps/api/src/common/exceptions/invitation.exception.ts` — exceptions custom
-  - [ ] T5.7: Enregistrer les providers dans `household.module.ts`
-  - [ ] T5.8: Ajouter subscription `householdMemberChanged(householdId)` dans `household.resolver.ts` (retro Story 1.3)
-  - [ ] T5.9: Publier `HOUSEHOLD_MEMBER_CHANGED` depuis `household.service.ts` lors de la creation du foyer (retro 1.3)
+  - [x] T5.6: Creer `apps/api/src/common/exceptions/invitation.exception.ts` — exceptions custom
+  - [x] T5.7: Enregistrer les providers dans `household.module.ts`
+  - [x] T5.8: Ajouter subscription `householdMemberChanged(householdId)` dans `household.resolver.ts` (retro Story 1.3)
+  - [x] T5.9: Publier `HOUSEHOLD_MEMBER_CHANGED` depuis `household.service.ts` lors de la creation du foyer (retro 1.3)
 
 - [ ] T6: Tests unitaires backend (AC: tous)
   - [ ] T6.1: `__tests__/invitation.service.spec.ts` — creation, acceptation (3 cas), annulation, expiration, limites, publish events

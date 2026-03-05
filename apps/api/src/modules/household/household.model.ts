@@ -21,6 +21,9 @@ export class HouseholdMemberModel {
   @Field(() => ID)
   userId!: string;
 
+  @Field(() => ID)
+  householdId!: string;
+
   @Field(() => String, { nullable: true })
   userName?: string | null;
 

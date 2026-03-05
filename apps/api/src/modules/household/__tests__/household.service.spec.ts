@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CircleType } from '@family-hub/shared';
 import { HouseholdService } from '../household.service';
 import { HouseholdRepository } from '../household.repository';
+import type { PubSubService } from '../../../common/pubsub';
 import {
   HouseholdAlreadyExistsException,
   HouseholdNameInvalidException,
@@ -42,10 +43,17 @@ describe('HouseholdService', () => {
     delete: vi.fn(),
     countMembersByHouseholdId: vi.fn(),
   };
+  const mockPubSub = {
+    publish: vi.fn().mockResolvedValue(undefined),
+    asyncIterableIterator: vi.fn(),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new HouseholdService(mockRepo as unknown as HouseholdRepository);
+    service = new HouseholdService(
+      mockRepo as unknown as HouseholdRepository,
+      mockPubSub as unknown as PubSubService,
+    );
   });
 
   describe('create()', () => {

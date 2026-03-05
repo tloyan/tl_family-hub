@@ -13,15 +13,20 @@ import {
   HouseholdNameInvalidException,
   NotHouseholdOwnerException,
 } from '../../common/exceptions/household.exception';
+import { PubSubService } from '../../common/pubsub';
 import { HouseholdRepository } from './household.repository';
 import { HouseholdModel, HouseholdMemberModel } from './household.model';
+import { HouseholdTopics } from './household.topics';
 import type { CreateHouseholdInput, UpdateHouseholdInput } from './household.dto';
 
 @Injectable()
 export class HouseholdService {
   private readonly logger = new Logger(HouseholdService.name);
 
-  constructor(private readonly householdRepository: HouseholdRepository) {}
+  constructor(
+    private readonly householdRepository: HouseholdRepository,
+    private readonly pubSubService: PubSubService,
+  ) {}
 
   async create(userId: string, input: CreateHouseholdInput): Promise<HouseholdModel> {
     const result = createHouseholdInput.safeParse({ name: input.name });
@@ -43,8 +48,16 @@ export class HouseholdService {
       circles: Object.values(CircleType),
     });
 
+    const model = this.toModel(household);
+    const ownerMember = model.members[0];
+    if (ownerMember) {
+      await this.pubSubService.publish(HouseholdTopics.MEMBER_CHANGED, {
+        householdMemberChanged: ownerMember,
+      });
+    }
+
     this.logger.log('Household created', { householdId: household.id, userId });
-    return this.toModel(household);
+    return model;
   }
 
   async findMyHousehold(userId: string): Promise<HouseholdModel | null> {
@@ -134,6 +147,7 @@ export class HouseholdService {
       m.color = member.color;
       m.joinedAt = member.joinedAt;
       m.userId = member.userId;
+      m.householdId = household.id;
       m.userName = member.user.name;
       m.userEmail = member.user.email;
       return m;
