@@ -154,8 +154,8 @@ export class InvitationService {
       role: string;
       color: string;
       joinedAt: Date;
-      userId: string;
-      user: { name: string; email: string };
+      userId: string | null;
+      user: { name: string; email: string } | null;
       householdId: string;
     };
 
@@ -247,14 +247,22 @@ export class InvitationService {
       throw new InvitationNotFoundException();
     }
 
+    const inviterMember = await this.invitationRepository.findMemberByUserId(
+      invitation.invitedByUserId,
+      invitation.householdId,
+    );
+
     if (invitation.status === InvitationStatus.PENDING && new Date() > invitation.expiresAt) {
       await this.invitationRepository.updateStatus(invitation.id, {
         status: InvitationStatus.EXPIRED,
       });
-      return this.toPublicModel({ ...invitation, status: InvitationStatus.EXPIRED });
+      return this.toPublicModel(
+        { ...invitation, status: InvitationStatus.EXPIRED },
+        inviterMember?.displayName,
+      );
     }
 
-    return this.toPublicModel(invitation);
+    return this.toPublicModel(invitation, inviterMember?.displayName);
   }
 
   private toModel(invitation: {
@@ -291,18 +299,21 @@ export class InvitationService {
     return model;
   }
 
-  private toPublicModel(invitation: {
-    role: string;
-    relation: string;
-    status: string;
-    expiresAt: Date;
-    household: { name: string };
-    invitedBy: { name: string };
-    linkedMemberProfile: { id: string; color: string; role: string } | null;
-  }): InvitationPublicModel {
+  private toPublicModel(
+    invitation: {
+      role: string;
+      relation: string;
+      status: string;
+      expiresAt: Date;
+      household: { name: string };
+      invitedBy: { name: string };
+      linkedMemberProfile: { id: string; color: string; role: string } | null;
+    },
+    inviterDisplayName?: string | null,
+  ): InvitationPublicModel {
     const model = new InvitationPublicModel();
     model.householdName = invitation.household.name;
-    model.inviterName = invitation.invitedBy.name;
+    model.inviterName = inviterDisplayName || invitation.invitedBy.name;
     model.role = invitation.role as InvitationPublicModel['role'];
     model.relation = invitation.relation;
     model.status = invitation.status as InvitationPublicModel['status'];
@@ -322,8 +333,8 @@ export class InvitationService {
     role: string;
     color: string;
     joinedAt: Date;
-    userId: string;
-    user: { name: string; email: string };
+    userId: string | null;
+    user: { name: string; email: string } | null;
     householdId: string;
   }): HouseholdMemberModel {
     const m = new HouseholdMemberModel();
@@ -332,8 +343,8 @@ export class InvitationService {
     m.color = member.color;
     m.joinedAt = member.joinedAt;
     m.userId = member.userId;
-    m.userName = member.user.name;
-    m.userEmail = member.user.email;
+    m.userName = member.user?.name ?? null;
+    m.userEmail = member.user?.email ?? null;
     m.householdId = member.householdId;
     return m;
   }

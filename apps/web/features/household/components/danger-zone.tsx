@@ -16,15 +16,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { DELETE_HOUSEHOLD_MUTATION } from '../graphql';
+import { useSession } from '@/lib/auth-client';
+import { DELETE_HOUSEHOLD_MUTATION, type HouseholdMember } from '../graphql';
 
 interface DangerZoneProps {
   householdName: string;
+  members: HouseholdMember[];
 }
 
-export function DangerZone({ householdName }: DangerZoneProps) {
+export function DangerZone({ householdName, members }: DangerZoneProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentMember = members.find((m) => m.userId === session?.user.id);
+  const isOwner = currentMember?.role === 'OWNER';
   const [deleteHousehold, { loading: deleting }] = useMutation(DELETE_HOUSEHOLD_MUTATION);
+
+  if (!isOwner) return null;
 
   async function handleDelete() {
     try {

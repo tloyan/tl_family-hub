@@ -15,11 +15,17 @@ export class HouseholdMemberModel {
   @Field()
   color!: string;
 
+  @Field(() => String, { nullable: true })
+  displayName?: string | null;
+
+  @Field(() => String, { nullable: true })
+  relation?: string | null;
+
   @Field()
   joinedAt!: Date;
 
-  @Field(() => ID)
-  userId!: string;
+  @Field(() => ID, { nullable: true })
+  userId?: string | null;
 
   @Field(() => ID)
   householdId!: string;

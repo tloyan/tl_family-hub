@@ -16,6 +16,12 @@ export class PubSubService implements OnModuleDestroy {
     this.pubSub = new RedisPubSub({
       publisher: new Redis(redisUrl),
       subscriber: new Redis(redisUrl),
+      reviver: (_key: string, value: unknown) => {
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+          return new Date(value);
+        }
+        return value;
+      },
     });
 
     const host = new URL(redisUrl).hostname;

@@ -14,6 +14,7 @@ export function VerifyOtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const redirectTo = searchParams.get('redirect');
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -57,7 +58,7 @@ export function VerifyOtpForm() {
           return;
         }
 
-        router.replace('/');
+        router.replace(redirectTo ?? '/');
       } catch {
         setError('Une erreur est survenue. Veuillez réessayer.');
         setOtp('');
@@ -66,7 +67,7 @@ export function VerifyOtpForm() {
         verifyingRef.current = false;
       }
     },
-    [email, router],
+    [email, redirectTo],
   );
 
   function handleOtpChange(value: string) {
@@ -162,7 +163,7 @@ export function VerifyOtpForm() {
         </div>
 
         <Link
-          href="/login"
+          href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}
           className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
         >
           Utiliser une autre adresse email

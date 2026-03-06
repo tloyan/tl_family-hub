@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function LoginPage() {
           Connectez-vous pour accéder à votre espace famille
         </p>
       </div>
-      <LoginForm />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

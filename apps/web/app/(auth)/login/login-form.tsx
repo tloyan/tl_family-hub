@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, emailOtp } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -21,7 +23,10 @@ export function LoginForm() {
     setError('');
     setGoogleLoading(true);
     try {
-      await signIn.social({ provider: 'google', callbackURL: window.location.origin + '/' });
+      await signIn.social({
+        provider: 'google',
+        callbackURL: redirectTo ?? window.location.origin + '/',
+      });
     } catch {
       setError('Une erreur est survenue avec Google. Veuillez réessayer.');
       setGoogleLoading(false);
@@ -50,7 +55,8 @@ export function LoginForm() {
         return;
       }
 
-      router.push(`/verify-otp?email=${encodeURIComponent(trimmedEmail)}`);
+      const verifyUrl = `/verify-otp?email=${encodeURIComponent(trimmedEmail)}${redirectTo ? `&redirect=${encodeURIComponent(redirectTo)}` : ''}`;
+      router.push(verifyUrl);
     } catch {
       setError('Impossible d\u2019envoyer le code. Veuillez réessayer.');
     } finally {

@@ -10,6 +10,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Family Hub',
   description: 'Family Hub — organisez votre famille simplement',
+  openGraph: {
+    siteName: 'Family Hub',
+    locale: 'fr_FR',
+  },
 };
 
 export default function RootLayout({

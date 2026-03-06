@@ -46,22 +46,24 @@ const wsLogger = new Logger('GraphQL-WS');
         subscriptions: {
           'graphql-ws': {
             onConnect: async (ctx) => {
-              const token = ctx.connectionParams?.['token'];
-              if (!token || typeof token !== 'string') {
-                wsLogger.warn('WebSocket connection rejected: no token');
+              const extra = ctx.extra as { request?: { headers?: { cookie?: string } } };
+              const cookieHeader = extra.request?.headers?.cookie;
+              if (!cookieHeader) {
+                wsLogger.warn('WebSocket connection rejected: no cookies');
                 return false;
               }
 
               const session = await authService.api.getSession({
-                headers: new Headers({ authorization: `Bearer ${token}` }),
+                headers: new Headers({ cookie: cookieHeader }),
               });
 
               if (!session) {
-                wsLogger.warn('WebSocket connection rejected: invalid token');
+                wsLogger.warn('WebSocket connection rejected: invalid session');
                 return false;
               }
 
               (ctx.extra as Record<string, unknown>)['session'] = session;
+              (ctx.extra as Record<string, unknown>)['cookieHeader'] = cookieHeader;
               return true;
             },
           },
@@ -70,13 +72,18 @@ const wsLogger = new Logger('GraphQL-WS');
           req,
           extra,
         }: {
-          req?: { session?: unknown };
+          req?: { session?: unknown; headers?: Record<string, string> };
           extra?: Record<string, unknown>;
         }) => {
           // WebSocket connections carry session in extra (set by onConnect)
           // HTTP connections carry session in req (set by auth middleware)
           if (extra?.['session']) {
-            return { req: { session: extra['session'] } };
+            return {
+              req: {
+                session: extra['session'],
+                headers: { cookie: extra['cookieHeader'] as string },
+              },
+            };
           }
           return { req };
         },

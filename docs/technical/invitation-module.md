@@ -266,6 +266,7 @@ Le `PubSubService` (module global) wrape `graphql-redis-subscriptions` avec Redi
 
 - `publish(topic, payload)` — publie un message
 - `asyncIterableIterator(topic)` — retourne un iterateur pour les subscriptions GraphQL
+- `reviver` — reconvertit les strings ISO 8601 en objets `Date` lors de la deserialisation (necessaire car `JSON.stringify` convertit les `Date` en string, et le scalar GraphQL `DateTime` refuse de serialiser une string)
 
 Les subscriptions utilisent un **filtre par householdId** pour que chaque client ne recoive que les events de son propre household :
 
@@ -274,6 +275,68 @@ Les subscriptions utilisent un **filtre par householdId** pour que chaque client
   filter: (payload, variables) =>
     payload.invitationAccepted.householdId === variables.householdId,
 })
+```
+
+### Authentification WebSocket
+
+L'authentification WebSocket utilise les cookies de la requete HTTP upgrade — le browser les envoie automatiquement lors de l'ouverture d'un WebSocket vers le meme domaine.
+
+```
+Browser                          API (NestJS)
+   |                                |
+   |-- new WebSocket(ws://...)  --->|
+   |   (HTTP upgrade request)       |
+   |   Cookie: better-auth...=xxx   |
+   |                                |-- onConnect:
+   |                                |   ctx.extra.request.headers.cookie
+   |                                |   → getSession({ headers: { cookie } })
+   |                                |   → session stockee dans ctx.extra
+   |<-- connection_ack -------------|
+   |                                |
+   |-- subscribe { query, vars } -->|
+   |                                |-- AuthGuard:
+   |                                |   req.headers.cookie (depuis ctx.extra)
+   |                                |   → getSession() → session valide
+   |                                |
+   |<== next { data } ==============| (quand un event est publie)
+```
+
+Le `nestjs-better-auth` `AuthGuard` appelle toujours `getSession` avec `req.headers`. Le contexte GraphQL pour les connexions WS inclut donc le cookie header dans `req.headers` pour que le guard puisse resoudre la session :
+
+```typescript
+context: ({ req, extra }) => {
+  if (extra?.['session']) {
+    return {
+      req: {
+        session: extra['session'],
+        headers: { cookie: extra['cookieHeader'] },
+      },
+    };
+  }
+  return { req };
+},
+```
+
+### Mise a jour du cache Apollo (client)
+
+Les subscriptions mettent a jour le cache Apollo directement via `cache.updateQuery` plutot que `refetchQueries` pour eviter les re-renders et le flicker UI :
+
+```typescript
+useSubscription(INVITATION_ACCEPTED_SUBSCRIPTION, {
+  variables: { householdId },
+  onData({ client, data: subData }) {
+    if (!subData.data) return;
+    const accepted = subData.data.invitationAccepted;
+    client.cache.updateQuery({ query: HOUSEHOLD_INVITATIONS_QUERY }, (existing) => {
+      if (!existing) return existing;
+      return {
+        householdInvitations: existing.householdInvitations.map((inv) =>
+          inv.id === accepted.id ? { ...inv, ...accepted } : inv,
+        ),
+      };
+    });
+  },
+});
 ```
 
 ## Fichiers modifies (retro-fit household)
@@ -328,3 +391,65 @@ model Invitation {
 ```
 
 Le modele `Invitation` est enregistre dans `householdExtension` comme modele scope — les requetes via le Prisma scope sont automatiquement filtrees par `householdId`.
+
+## Flow d'invitation — Acces public et redirection post-login
+
+### Middleware (proxy.ts)
+
+Le proxy Next.js 16 (`apps/web/proxy.ts`) definit trois categories de routes :
+
+| Categorie | Routes                  | Comportement                                                      |
+| --------- | ----------------------- | ----------------------------------------------------------------- |
+| Auth      | `/login`, `/verify-otp` | Accessibles sans auth. Si authentifie, redirect vers `/household` |
+| Public    | `/invite`               | Accessibles a tous, aucune redirection                            |
+| Protege   | Tout le reste           | Si non authentifie, redirect vers `/login?redirect={pathname}`    |
+
+Le `?redirect=` est preserve a travers tout le flow d'authentification :
+
+- `login-form.tsx` le lit via `searchParams.get('redirect')` et le passe a Google OAuth (`callbackURL`) et a la page OTP
+- `verify-otp-form.tsx` le lit et redirige vers `redirectTo` apres verification reussie
+
+### Flow complet (utilisateur non connecte)
+
+```
+1. Clic sur /invite/TOKEN
+   → proxy.ts: route publique → NextResponse.next()
+   → Page publique affichee (nom du foyer, inviteur, role, relation)
+
+2. Clic "Se connecter pour rejoindre"
+   → localStorage.pendingInviteToken = TOKEN
+   → router.push('/login?redirect=/invite/TOKEN')
+
+3. Connexion (Email OTP ou Google OAuth)
+   → redirect preserve dans le flow
+   → Apres auth: router.replace('/invite/TOKEN')
+
+4. Retour sur /invite/TOKEN (authentifie)
+   → Bouton "Rejoindre le foyer" affiche
+   → acceptInvitation mutation
+   → localStorage.removeItem('pendingInviteToken')
+   → router.replace('/household')
+```
+
+### Page /household sans foyer
+
+Quand un utilisateur authentifie n'a pas de foyer, la page `/household` affiche une page d'accueil avec :
+
+- `PendingInviteBanner` : si `localStorage.pendingInviteToken` existe, affiche un lien vers l'invitation
+- Bouton CTA "Creer un foyer" vers `/household/create`
+
+Cela remplace l'ancien `redirect('/household/create')` qui empechait l'affichage du banner d'invitation.
+
+### inviterName — Resolution depuis HouseholdMember.displayName
+
+Le champ `inviterName` dans `InvitationPublicModel` utilise le `displayName` du `HouseholdMember` de l'inviteur (recupere via `findMemberByUserId`), avec fallback sur `User.name`. Cela est necessaire car `User.name` n'est pas collecte par Better Auth lors de l'inscription par email OTP — seul Google OAuth le remplit automatiquement. Le `displayName` est le nom que l'utilisateur a choisi d'afficher dans le foyer.
+
+### Securite des invitations sans email
+
+L'email sur l'invitation est un canal de distribution (envoi du lien), pas une verification d'identite. N'importe quel utilisateur authentifie possedant le lien peut accepter l'invitation, meme si son email differe de celui cible. La securite repose sur :
+
+- Token 256 bits (`crypto.randomBytes(32).toString('base64url')`) — impossible a deviner
+- Usage unique (statut passe a ACCEPTED)
+- Expiration configurable (`INVITATION_EXPIRY_DAYS = 7`)
+- Annulable par OWNER/ADMIN a tout moment
+- Limite de 10 invitations pending par foyer

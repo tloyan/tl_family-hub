@@ -35,6 +35,12 @@ export class HouseholdNameInvalidException extends BadRequestException {
   }
 }
 
+export class MemberNotFoundException extends NotFoundException {
+  constructor() {
+    super({ code: 'MEMBER_NOT_FOUND', message: 'Member not found' });
+  }
+}
+
 export class NotHouseholdOwnerException extends ForbiddenException {
   constructor() {
     super({

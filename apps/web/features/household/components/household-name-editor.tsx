@@ -7,14 +7,19 @@ import { updateHouseholdInput } from '@family-hub/shared';
 import { Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { UPDATE_HOUSEHOLD_MUTATION } from '../graphql';
+import { useSession } from '@/lib/auth-client';
+import { UPDATE_HOUSEHOLD_MUTATION, type HouseholdMember } from '../graphql';
 
 interface HouseholdNameEditorProps {
   name: string;
+  members: HouseholdMember[];
 }
 
-export function HouseholdNameEditor({ name }: HouseholdNameEditorProps) {
+export function HouseholdNameEditor({ name, members }: HouseholdNameEditorProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentMember = members.find((m) => m.userId === session?.user.id);
+  const isOwner = currentMember?.role === 'OWNER';
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
@@ -105,6 +110,10 @@ export function HouseholdNameEditor({ name }: HouseholdNameEditorProps) {
         )}
       </div>
     );
+  }
+
+  if (!isOwner) {
+    return <h1 className="text-2xl font-bold">{name}</h1>;
   }
 
   return (

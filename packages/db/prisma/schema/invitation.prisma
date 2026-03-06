@@ -23,7 +23,7 @@ model Invitation {
   householdId           String           @map("household_id") @db.Uuid
   invitedByUserId       String           @map("invited_by_user_id")
   acceptedByUserId      String?          @map("accepted_by_user_id")
-  linkedMemberProfileId String?          @unique @map("linked_member_profile_id") @db.Uuid
+  linkedMemberProfileId String?          @map("linked_member_profile_id") @db.Uuid
 
   household           Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
   invitedBy           User             @relation("InvitedBy", fields: [invitedByUserId], references: [id])

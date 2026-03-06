@@ -5,14 +5,19 @@ import {
   HouseholdRole,
   createHouseholdInput,
   updateHouseholdInput,
+  createMemberProfileInput,
+  updateMemberProfileInput,
   getNextColor,
+  MAX_MEMBERS_PER_HOUSEHOLD,
 } from '@family-hub/shared';
 import {
   HouseholdNotFoundException,
   HouseholdAlreadyExistsException,
   HouseholdNameInvalidException,
+  MemberNotFoundException,
   NotHouseholdOwnerException,
 } from '../../common/exceptions/household.exception';
+import { InvitationLimitReachedException } from '../../common/exceptions/invitation.exception';
 import { PubSubService } from '../../common/pubsub';
 import { HouseholdRepository } from './household.repository';
 import { HouseholdModel, HouseholdMemberModel } from './household.model';
@@ -122,6 +127,121 @@ export class HouseholdService {
     return this.toModel(household);
   }
 
+  async createMemberProfile(
+    userId: string,
+    householdId: string,
+    input: { displayName: string; role: string; relation: string },
+  ): Promise<HouseholdMemberModel> {
+    const result = createMemberProfileInput.safeParse(input);
+    if (!result.success) {
+      throw new HouseholdNameInvalidException();
+    }
+
+    const household = await this.householdRepository.findById(householdId);
+    if (!household) {
+      throw new HouseholdNotFoundException();
+    }
+
+    const member = household.members.find((m) => m.userId === userId);
+    if (!member || (member.role !== HouseholdRole.OWNER && member.role !== HouseholdRole.ADMIN)) {
+      throw new NotHouseholdOwnerException();
+    }
+
+    const membersCount = await this.householdRepository.countMembersByHouseholdId(householdId);
+    if (membersCount >= MAX_MEMBERS_PER_HOUSEHOLD) {
+      throw new InvitationLimitReachedException();
+    }
+
+    const color = getNextColor(membersCount);
+    const created = await this.householdRepository.createMemberProfile({
+      id: uuidv7(),
+      displayName: result.data.displayName,
+      role: result.data.role,
+      relation: result.data.relation,
+      color,
+      householdId,
+    });
+
+    const memberModel = this.toMemberModel(created, householdId);
+
+    await this.pubSubService.publish(HouseholdTopics.MEMBER_CHANGED, {
+      householdMemberChanged: memberModel,
+    });
+
+    this.logger.log('Member profile created', { memberId: created.id, householdId });
+    return memberModel;
+  }
+
+  async updateMemberProfile(
+    userId: string,
+    householdId: string,
+    input: { id: string; displayName: string },
+  ): Promise<HouseholdMemberModel> {
+    const result = updateMemberProfileInput.safeParse(input);
+    if (!result.success) {
+      throw new HouseholdNameInvalidException();
+    }
+
+    const target = await this.householdRepository.findMemberById(result.data.id);
+    if (!target || target.householdId !== householdId) {
+      throw new MemberNotFoundException();
+    }
+
+    const household = await this.householdRepository.findById(householdId);
+    if (!household) {
+      throw new HouseholdNotFoundException();
+    }
+
+    const caller = household.members.find((m) => m.userId === userId);
+    const isSelfEdit = target.userId === userId;
+    const isAdminOrOwner =
+      caller?.role === HouseholdRole.OWNER || caller?.role === HouseholdRole.ADMIN;
+
+    if (!isSelfEdit && !isAdminOrOwner) {
+      throw new NotHouseholdOwnerException();
+    }
+
+    const updated = await this.householdRepository.updateMemberProfile(result.data.id, {
+      displayName: result.data.displayName,
+    });
+
+    const memberModel = this.toMemberModel(updated, householdId);
+
+    await this.pubSubService.publish(HouseholdTopics.MEMBER_CHANGED, {
+      householdMemberChanged: memberModel,
+    });
+
+    this.logger.log('Member profile updated', { memberId: updated.id, householdId });
+    return memberModel;
+  }
+
+  private toMemberModel(
+    member: {
+      id: string;
+      role: string;
+      color: string;
+      displayName: string | null;
+      relation: string | null;
+      joinedAt: Date;
+      userId: string | null;
+      user: { name: string; email: string } | null;
+    },
+    householdId: string,
+  ): HouseholdMemberModel {
+    const m = new HouseholdMemberModel();
+    m.id = member.id;
+    m.role = member.role as HouseholdMemberModel['role'];
+    m.color = member.color;
+    m.displayName = member.displayName;
+    m.relation = member.relation;
+    m.joinedAt = member.joinedAt;
+    m.userId = member.userId;
+    m.householdId = householdId;
+    m.userName = member.user?.name ?? null;
+    m.userEmail = member.user?.email ?? null;
+    return m;
+  }
+
   private toModel(household: {
     id: string;
     name: string;
@@ -130,9 +250,11 @@ export class HouseholdService {
       id: string;
       role: string;
       color: string;
+      displayName: string | null;
+      relation: string | null;
       joinedAt: Date;
-      userId: string;
-      user: { name: string; email: string };
+      userId: string | null;
+      user: { name: string; email: string } | null;
     }[];
   }): HouseholdModel {
     const model = new HouseholdModel();
@@ -140,18 +262,7 @@ export class HouseholdService {
     model.name = household.name;
     model.createdAt = household.createdAt;
     model.membersCount = household.members.length;
-    model.members = household.members.map((member) => {
-      const m = new HouseholdMemberModel();
-      m.id = member.id;
-      m.role = member.role as HouseholdMemberModel['role'];
-      m.color = member.color;
-      m.joinedAt = member.joinedAt;
-      m.userId = member.userId;
-      m.householdId = household.id;
-      m.userName = member.user.name;
-      m.userEmail = member.user.email;
-      return m;
-    });
+    model.members = household.members.map((member) => this.toMemberModel(member, household.id));
     return model;
   }
 }

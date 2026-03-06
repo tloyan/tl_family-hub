@@ -13,7 +13,7 @@ export default function AppLayout({ children }: Readonly<{ children: React.React
 
   useEffect(() => {
     if (!isPending && !session) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
     }
   }, [isPending, session, router]);
 

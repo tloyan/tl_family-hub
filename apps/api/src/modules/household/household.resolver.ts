@@ -3,7 +3,12 @@ import { UseGuards } from '@nestjs/common';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { PubSubService } from '../../common/pubsub';
 import { HouseholdModel, HouseholdMemberModel } from './household.model';
-import { CreateHouseholdInput, UpdateHouseholdInput } from './household.dto';
+import {
+  CreateHouseholdInput,
+  UpdateHouseholdInput,
+  CreateMemberProfileInput,
+  UpdateMemberProfileInput,
+} from './household.dto';
 import { HouseholdService } from './household.service';
 import { HouseholdGuard } from '../../common/guards/household.guard';
 import { CurrentHousehold } from '../../common/decorators/current-household.decorator';
@@ -41,6 +46,26 @@ export class HouseholdResolver {
   @Mutation(() => Boolean)
   async deleteHousehold(@Session() session: UserSession): Promise<boolean> {
     return this.householdService.delete(session.user.id);
+  }
+
+  @UseGuards(HouseholdGuard)
+  @Mutation(() => HouseholdMemberModel)
+  async createMemberProfile(
+    @Session() session: UserSession,
+    @CurrentHousehold() householdId: string,
+    @Args('input') input: CreateMemberProfileInput,
+  ): Promise<HouseholdMemberModel> {
+    return this.householdService.createMemberProfile(session.user.id, householdId, input);
+  }
+
+  @UseGuards(HouseholdGuard)
+  @Mutation(() => HouseholdMemberModel)
+  async updateMemberProfile(
+    @Session() session: UserSession,
+    @CurrentHousehold() householdId: string,
+    @Args('input') input: UpdateMemberProfileInput,
+  ): Promise<HouseholdMemberModel> {
+    return this.householdService.updateMemberProfile(session.user.id, householdId, input);
   }
 
   @UseGuards(HouseholdGuard)

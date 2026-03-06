@@ -114,7 +114,9 @@ describe('InvitationService', () => {
           invitedByUserId: 'user-1',
         }),
       );
-      const callArgs = mockRepo.create.mock.calls[0][0] as { expiresAt: Date };
+      const call = mockRepo.create.mock.calls[0];
+      expect(call).toBeDefined();
+      const callArgs = (call as [{ expiresAt: Date }])[0];
       expect(callArgs.expiresAt).toBeInstanceOf(Date);
     });
 

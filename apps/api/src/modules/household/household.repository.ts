@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v7 as uuidv7 } from 'uuid';
-import type { CircleType } from '@family-hub/shared';
+import type { CircleType, HouseholdRole } from '@family-hub/shared';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -70,6 +70,42 @@ export class HouseholdRepository {
   async countMembersByHouseholdId(householdId: string): Promise<number> {
     return this.prisma.householdMember.count({
       where: { householdId },
+    });
+  }
+
+  async createMemberProfile(data: {
+    id: string;
+    displayName: string;
+    role: HouseholdRole;
+    relation: string;
+    color: string;
+    householdId: string;
+  }) {
+    return this.prisma.householdMember.create({
+      data: {
+        id: data.id,
+        displayName: data.displayName,
+        role: data.role,
+        relation: data.relation,
+        color: data.color,
+        householdId: data.householdId,
+      },
+      include: { user: true },
+    });
+  }
+
+  async findMemberById(id: string) {
+    return this.prisma.householdMember.findUnique({
+      where: { id },
+      include: { user: true },
+    });
+  }
+
+  async updateMemberProfile(id: string, data: { displayName: string }) {
+    return this.prisma.householdMember.update({
+      where: { id },
+      data: { displayName: data.displayName },
+      include: { user: true },
     });
   }
 }

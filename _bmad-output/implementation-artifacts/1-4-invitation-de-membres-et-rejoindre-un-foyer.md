@@ -146,7 +146,7 @@ And le token expire apres la duree configuree
   - [x] T4.2: Configurer Apollo Server 5 avec `graphql-ws` WebSocket transport dans `app.module.ts`
   - [x] T4.3: Creer `apps/api/src/common/pubsub/pubsub.module.ts` — module global PubSub avec Redis backend
   - [x] T4.4: Creer `apps/api/src/common/pubsub/pubsub.service.ts` — wrapper PubSub injectable (topics `string`, pas de couplage metier)
-  - [x] T4.5: Configurer l'authentification WebSocket (token session dans `connectionParams`, validation via `bearer()` plugin + `authService.api.getSession()`)
+  - [x] T4.5: Configurer l'authentification WebSocket (cookies lus depuis la requete HTTP upgrade, validation via `authService.api.getSession()`)
 
 - [x] T5: API Backend — Module invitation + subscriptions (AC: 1-5, 7, 9, 10)
   - [x] T5.1: Creer `invitation.model.ts` — `@ObjectType()` GraphQL (`Invitation`, `InvitationStatus`)
@@ -172,15 +172,15 @@ And le token expire apres la duree configuree
   - [x] T6.3: `__tests__/invitation.repository.spec.ts` — appels Prisma
   - [x] T6.4: `common/pubsub/__tests__/pubsub.service.spec.ts` — publish et subscribe
 
-- [ ] T7: Frontend Web + Subscriptions — Flow d'invitation (AC: 1-5, 7-9)
-  - [ ] T7.1: Creer `apps/web/features/household/graphql.ts` — ajouter queries, mutations, subscriptions invitation
-  - [ ] T7.2: Creer `apps/web/app/(app)/household/invite/page.tsx` — formulaire de creation d'invitation (RSC + client form)
-  - [ ] T7.3: Creer `apps/web/app/invite/[token]/page.tsx` — ecran d'accueil invitation (public, hors layout auth)
-  - [ ] T7.4: Creer `apps/web/features/household/components/invitation-list.tsx` — liste des invitations du foyer
-  - [ ] T7.5: Integrer la liste des invitations dans le dashboard foyer existant
-  - [ ] T7.6: Configurer Apollo Client web avec `GraphQLWsLink` + split link (HTTP queries/mutations, WS subscriptions)
-  - [ ] T7.7: `useSubscription(HOUSEHOLD_MEMBER_CHANGED)` dans le dashboard foyer — mise a jour temps reel de la liste membres
-  - [ ] T7.8: `useSubscription(INVITATION_ACCEPTED)` dans la liste des invitations — mise a jour statut en temps reel
+- [x] T7: Frontend Web + Subscriptions — Flow d'invitation (AC: 1-5, 7-9)
+  - [x] T7.1: Creer `apps/web/features/household/graphql.ts` — ajouter queries, mutations, subscriptions invitation
+  - [x] T7.2: Creer `apps/web/app/(app)/household/invite/page.tsx` — formulaire de creation d'invitation (RSC + client form)
+  - [x] T7.3: Creer `apps/web/app/(public)/invite/[token]/page.tsx` — ecran d'accueil invitation (public, hors layout auth)
+  - [x] T7.4: Creer `apps/web/features/household/components/invitation-list.tsx` — liste des invitations du foyer
+  - [x] T7.5: Integrer la liste des invitations dans le dashboard foyer existant
+  - [x] T7.6: Configurer Apollo Client web avec `GraphQLWsLink` + split link (HTTP queries/mutations, WS subscriptions)
+  - [x] T7.7: `useSubscription(HOUSEHOLD_MEMBER_CHANGED)` dans le dashboard foyer — mise a jour temps reel de la liste membres
+  - [x] T7.8: `useSubscription(INVITATION_ACCEPTED)` dans la liste des invitations — mise a jour statut en temps reel
 
 - [ ] T8: Frontend Mobile + Subscriptions — Flow d'invitation (AC: 1-5, 7-9)
   - [ ] T8.1: Mettre a jour `apps/mobile/features/household/graphql.ts` — queries, mutations, subscriptions invitation
@@ -278,7 +278,7 @@ Le QR code est genere cote client a partir de l'URL d'invitation. Pas de generat
 | **Protocole** | `graphql-ws` (standard actuel, `subscriptions-transport-ws` est deprecated) |
 | **Transport** | WebSocket sur le meme serveur NestJS (Apollo Server 5 supporte `graphql-ws` nativement) |
 | **Pub/Sub backend** | Redis (Upstash) via `graphql-redis-subscriptions` pour multi-instances |
-| **Auth WebSocket** | Token de session dans `connectionParams`, valide a la connexion WS |
+| **Auth WebSocket** | Cookies lus depuis la requete HTTP upgrade WebSocket, valides via `getSession()` |
 | **Subscriptions invitation** | `invitationAccepted(householdId)` — notifie l'admin quand un invite rejoint |
 | **Subscriptions household** | `householdMemberChanged(householdId)` — notifie tous les membres (retro Story 1.3) |
 | **Client web** | `GraphQLWsLink` + split link Apollo (HTTP pour queries/mutations, WS pour subscriptions) |
@@ -849,8 +849,8 @@ invitationAccepted(@Args('householdId') householdId: string) {
 
 - Protocole standard pour les subscriptions GraphQL (remplace `subscriptions-transport-ws`)
 - Compatible Apollo Server 5 nativement via `ApolloServerPluginDrainHttpServer`
-- Authentification via `connectionParams` dans le `onConnect` handler
-- Pattern NestJS : configurer dans `GraphQLModule.forRoot()` avec `subscriptions: { 'graphql-ws': true }`
+- Authentification via cookies de la requete HTTP upgrade dans le `onConnect` handler (`ctx.extra.request.headers.cookie`)
+- Pattern NestJS : configurer dans `GraphQLModule.forRoot()` avec `subscriptions: { 'graphql-ws': { onConnect } }`
 
 #### graphql-redis-subscriptions
 
@@ -917,16 +917,74 @@ invitationAccepted(@Args('householdId') householdId: string) {
 
 ### Agent Model Used
 
-(a remplir par le dev agent)
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
-(a remplir par le dev agent)
+N/A
 
 ### Completion Notes List
 
-(a remplir par le dev agent)
+#### Fix: Flow d'invitation pour utilisateurs non connectes (2026-03-05)
+
+**Probleme** : Un utilisateur non connecte cliquant sur `/invite/TOKEN` etait redirige vers `/login` par le proxy (middleware Next.js 16) sans preservation de l'URL de retour. Apres connexion, il atterrissait sur `/household/create` au lieu de la page d'invitation.
+
+**Cause racine** : Le proxy (`apps/web/proxy.ts`) traitait toutes les routes non-auth comme protegees, sans notion de routes publiques. De plus, la redirection vers `/login` ne preservait pas l'URL d'origine via un query param `?redirect=`.
+
+**Corrections appliquees** :
+
+1. **`apps/web/proxy.ts`** — Ajout de `PUBLIC_ROUTES = ['/invite', '/api']` pour permettre l'acces sans auth. Ajout de `?redirect={pathname}` lors de la redirection vers `/login` pour les routes protegees.
+
+2. **`apps/web/app/(app)/household/page.tsx`** — Remplacement de `redirect('/household/create')` par une page d'accueil inline avec `PendingInviteBanner` et bouton CTA "Creer un foyer". Permet a l'utilisateur de voir l'invitation en attente avant de creer un foyer.
+
+3. **`apps/web/app/(app)/layout.tsx`** — Le fallback auth client-side preserve maintenant l'URL courante : `router.replace(\`/login?redirect=...\`)`.
+
+4. **`apps/web/app/(auth)/verify-otp/verify-otp-form.tsx`** — Le lien "Utiliser une autre adresse email" preserve le param `?redirect=` lors du retour a `/login`.
+
+5. **`apps/api/src/modules/household/invitation.service.ts`** — `getInvitationByToken` recupere maintenant le `displayName` du `HouseholdMember` de l'inviteur (via `findMemberByUserId`) et l'utilise comme `inviterName` dans `toPublicModel`. Fallback sur `User.name` si le displayName est absent. Corrige le champ "Invite par:" qui etait vide car `User.name` n'est pas collecte par Better Auth lors de l'inscription OTP.
+
+**Design decisions** :
+- L'email sur l'invitation sert uniquement de canal de distribution (envoi du lien), pas de verification d'identite. Pas de verification de correspondance email a l'acceptation — un utilisateur peut s'inscrire avec un email different de celui cible par l'invitation. C'est le meme modele que Slack, Notion, etc.
+- La securite repose sur le token (256 bits, usage unique, expiration 7j, annulable par admin).
+- L'invitation sans email (lien seul) est un cas d'usage valide pour le contexte familial (partage via WhatsApp, SMS, en personne, QR code).
 
 ### File List
 
-(a remplir par le dev agent)
+#### Fichiers modifies (flow d'invitation)
+
+| Fichier | Changement |
+|---------|-----------|
+| `apps/web/proxy.ts` | Ajout `PUBLIC_ROUTES`, preservation `?redirect=` |
+| `apps/web/app/(app)/household/page.tsx` | Page d'accueil avec CTA au lieu du redirect |
+| `apps/web/app/(app)/layout.tsx` | Preservation redirect URL dans fallback auth |
+| `apps/web/app/(auth)/verify-otp/verify-otp-form.tsx` | Preservation redirect sur lien "changer d'email" |
+| `apps/api/src/modules/household/invitation.service.ts` | Resolution `inviterName` via `HouseholdMember.displayName` |
+
+#### Fix: WebSocket subscriptions et authentification (2026-03-06)
+
+**Probleme** : Les subscriptions GraphQL ne fonctionnaient pas. Trois causes identifiees :
+
+1. **Auth WS via Bearer echouait** : Le endpoint `/api/ws-token` (Next.js) exposait la valeur du cookie httpOnly de session au JS client, puis l'envoyait via `connectionParams`. Le `onConnect` utilisait `Authorization: Bearer <token>` mais le cookie contient `token.hmacSignature` — Better Auth Bearer plugin n'accepte que le token seul.
+
+2. **AuthGuard rejetait les subscriptions** : Le `AuthGuard` de `nestjs-better-auth` appelle toujours `getSession` avec `req.headers`, mais le contexte WS ne contenait pas de headers — d'ou `Unauthorized`.
+
+3. **Redis PubSub serialise les Date en string** : `JSON.stringify` convertit `Date` en string ISO, mais `JSON.parse` ne reconvertit pas. Le scalar GraphQL `DateTime` refusait de serialiser une string → erreur silencieuse `DateTime.serialize() returned null`.
+
+**Corrections appliquees** :
+
+1. **`apps/api/src/app.module.ts`** — `onConnect` lit les cookies directement depuis la requete HTTP upgrade (`ctx.extra.request.headers.cookie`) et appelle `getSession` avec le header cookie. Le contexte GraphQL inclut le cookie header pour que le `AuthGuard` puisse aussi resoudre la session. Plus besoin de `connectionParams` ni de token exchange.
+
+2. **`apps/api/src/common/pubsub/pubsub.service.ts`** — Ajout d'un `reviver` au constructeur `RedisPubSub` qui reconvertit les strings ISO 8601 en objets `Date` lors de la deserialisation des messages Redis.
+
+3. **`apps/web/components/providers/apollo-provider.tsx`** — Suppression de `connectionParams` et du `fetch('/api/ws-token')`. Le `createClient` est maintenant minimal (`url` + `lazy: true`), les cookies sont envoyes automatiquement par le browser sur la requete upgrade.
+
+4. **Supprime** : `apps/web/app/api/ws-token/route.ts` — endpoint inutile qui exposait le cookie httpOnly au JS client (faille de securite).
+
+5. **`apps/web/proxy.ts`** — Retire `/api` des `PUBLIC_ROUTES` (plus de routes API Next.js).
+
+6. **Cache Apollo** — Remplacement de `refetchQueries` par `cache.updateQuery` dans `invitation-list.tsx` et `members-list.tsx` pour eviter le clipping/flicker lors des mises a jour temps reel.
+
+**Design decisions** :
+- L'auth WebSocket utilise les cookies de la requete HTTP upgrade — standard HTTP, pas d'exposition du cookie httpOnly, pas d'endpoint intermediaire.
+- Le `reviver` dans `RedisPubSub` reconvertit generiquement toutes les strings ISO 8601 en `Date`, applicable a tous les futurs topics sans modification.
+- Les subscriptions mettent a jour le cache Apollo directement plutot que de refetch pour une UX fluide.
