@@ -60,7 +60,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+        uses: dopplerhq/cli-action@v4
 
       - name: Fetch Doppler secrets
         run: doppler secrets download --no-file --format env-no-quotes >> "$GITHUB_ENV"
@@ -186,7 +186,7 @@ jobs:
           cache: pnpm
 
       - name: Install Doppler CLI
-        uses: dopplerhq/cli-action@v3
+        uses: dopplerhq/cli-action@v4
 
       - name: Fetch Doppler secrets
         run: doppler secrets download --no-file --format env-no-quotes >> "$GITHUB_ENV"
