@@ -24,7 +24,7 @@
     "lucide-react": "^0.575.0",
     "next": "^16.1.6",
     "radix-ui": "^1.4.3",
-    "react": "^19.1.0",
+    "react": "^19.2.4",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.4.0"
   },
@@ -33,7 +33,7 @@
     "@family-hub/config-ts": "workspace:*",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.3.0",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "postcss": "^8.5.0",
