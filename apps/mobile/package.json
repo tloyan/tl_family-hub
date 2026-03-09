@@ -15,7 +15,7 @@
     "android": "expo run:android"
   },
   "dependencies": {
-    "@apollo/client": "^4.0.0",
+    "@apollo/client": "^4.1.6",
     "@better-auth/expo": "^1.4.18",
     "@family-hub/shared": "workspace:*",
     "@family-hub/tokens": "workspace:*",
