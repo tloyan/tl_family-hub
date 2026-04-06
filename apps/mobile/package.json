@@ -51,11 +51,11 @@
     "@babel/core": "^7.26.0",
     "@family-hub/config-eslint": "workspace:*",
     "@family-hub/config-ts": "workspace:*",
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.5.2",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.10",
     "eslint": "^9.0.0",
-    "react-native-css-interop": "^0.2.2",
+    "react-native-css-interop": "^0.2.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.0"
   }
